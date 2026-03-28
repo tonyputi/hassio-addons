@@ -39,3 +39,9 @@ RUN case "${BUILD_ARCH}" in \
 
 # Copy S6-overlay services and scripts
 COPY rootfs /
+
+# Ensure S6 run/finish scripts are executable regardless of git permissions
+RUN chmod +x \
+    /etc/s6-overlay/s6-rc.d/zeroclaw/run \
+    /etc/s6-overlay/s6-rc.d/zeroclaw/finish \
+    /etc/s6-overlay/s6-rc.d/ttyd/run
