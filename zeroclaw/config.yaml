@@ -12,15 +12,9 @@ init: false
 options:
   provider: gemini
   api_key: ""
-  model: gemini-2.0-flash
-  autonomy_mode: semi
 schema:
   provider: str
   api_key: password
-  model: str
-  autonomy_mode: list(full|semi|manual)
-  telegram_token: str?
-  telegram_chat_id: str?
 map:
   - data
 ingress: true
