@@ -46,6 +46,9 @@ if [ ! -f "${CONFIG_FILE}" ]; then
     bashio::log.info "Setup complete."
 fi
 
+# ── Cleanup: remove stale top-level keys not recognised by ZeroClaw ──────────
+sed -i '/^api_key\s*=/d' "${CONFIG_FILE}" 2>/dev/null || true
+
 # ── Timezone ──────────────────────────────────────────────────────────────────
 if [ -f "/usr/share/zoneinfo/${TIMEZONE}" ]; then
     ln -sf "/usr/share/zoneinfo/${TIMEZONE}" /etc/localtime
