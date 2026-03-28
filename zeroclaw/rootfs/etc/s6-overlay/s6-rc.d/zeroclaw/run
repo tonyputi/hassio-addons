@@ -1,0 +1,42 @@
+#!/command/with-contenv bashio
+# shellcheck shell=bash
+set -e
+
+PROVIDER=$(bashio::config 'provider')
+API_KEY=$(bashio::config 'api_key')
+MODEL=$(bashio::config 'model')
+AUTONOMY=$(bashio::config 'autonomy_mode')
+
+export HOME="/data/zeroclaw"
+mkdir -p "${HOME}/workspace"
+
+# Generate config.toml on first run or if missing
+if [ ! -f "${HOME}/config.toml" ]; then
+    bashio::log.info "Generating initial config.toml..."
+    cat > "${HOME}/config.toml" <<EOF
+default_provider = "${PROVIDER}"
+default_model = "${MODEL}"
+autonomy_mode = "${AUTONOMY}"
+
+[providers.${PROVIDER}]
+api_key = "${API_KEY}"
+EOF
+fi
+
+# Append Telegram config if token is set and not already present
+if bashio::config.has_value 'telegram_token'; then
+    TOKEN=$(bashio::config 'telegram_token')
+    CHAT=$(bashio::config 'telegram_chat_id')
+    if ! grep -q '\[integrations.telegram\]' "${HOME}/config.toml"; then
+        bashio::log.info "Adding Telegram integration to config..."
+        cat >> "${HOME}/config.toml" <<EOF
+
+[integrations.telegram]
+token = "${TOKEN}"
+allowed_chat_ids = [${CHAT}]
+EOF
+    fi
+fi
+
+bashio::log.info "Starting ZeroClaw daemon (provider=${PROVIDER}, model=${MODEL})..."
+exec /usr/local/bin/zeroclaw daemon

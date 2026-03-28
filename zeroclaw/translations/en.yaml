@@ -1,0 +1,19 @@
+configuration:
+  provider:
+    name: "AI Provider"
+    description: "The AI provider to use (e.g. gemini, openai, anthropic)"
+  api_key:
+    name: "API Key"
+    description: "Your API key for the chosen provider"
+  model:
+    name: "Model"
+    description: "The model to use (e.g. gemini-2.0-flash, gpt-4o)"
+  autonomy_mode:
+    name: "Autonomy Mode"
+    description: "Controls how ZeroClaw handles tool approvals: full (auto-approve all), semi (approve risky actions), manual (approve everything)"
+  telegram_token:
+    name: "Telegram Bot Token"
+    description: "Optional: token for Telegram bot integration"
+  telegram_chat_id:
+    name: "Telegram Chat ID"
+    description: "Optional: numeric chat ID to allow messages from"
