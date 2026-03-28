@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         tar \
         tzdata \
         jq \
+        git \
     && rm -rf /var/lib/apt/lists/*
 
 # Download and extract ZeroClaw pre-built binary (glibc, compatible with Debian base)

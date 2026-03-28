@@ -1,4 +1,5 @@
 export HOME="/data/zeroclaw"
+export SHELL="/bin/bash"
 export PATH="/usr/local/bin:${PATH}"
 cd "${HOME}" || true
 
