@@ -46,8 +46,8 @@ if [ ! -f "${CONFIG_FILE}" ]; then
     bashio::log.info "Setup complete."
 fi
 
-# ── Cleanup: remove stale top-level keys not recognised by ZeroClaw ──────────
-sed -i '/^api_key\s*=/d' "${CONFIG_FILE}" 2>/dev/null || true
+# ── Export API key as env var (works for all providers, avoids config.toml) ──
+export ZEROCLAW_API_KEY="${API_KEY}"
 
 # ── Timezone ──────────────────────────────────────────────────────────────────
 if [ -f "/usr/share/zoneinfo/${TIMEZONE}" ]; then
