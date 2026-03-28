@@ -46,8 +46,28 @@ if [ ! -f "${CONFIG_FILE}" ]; then
     bashio::log.info "Setup complete."
 fi
 
-# ── Export API key as env var (works for all providers, avoids config.toml) ──
+# ── Export API key for daemon and write to profile for terminal sessions ──────
 export ZEROCLAW_API_KEY="${API_KEY}"
+
+# Map provider to its specific env var so 'zeroclaw agent' in the terminal works
+case "${PROVIDER}" in
+    gemini|google)    PROVIDER_KEY_VAR="GEMINI_API_KEY" ;;
+    openai)           PROVIDER_KEY_VAR="OPENAI_API_KEY" ;;
+    anthropic)        PROVIDER_KEY_VAR="ANTHROPIC_API_KEY" ;;
+    openrouter)       PROVIDER_KEY_VAR="OPENROUTER_API_KEY" ;;
+    mistral)          PROVIDER_KEY_VAR="MISTRAL_API_KEY" ;;
+    groq)             PROVIDER_KEY_VAR="GROQ_API_KEY" ;;
+    deepseek)         PROVIDER_KEY_VAR="DEEPSEEK_API_KEY" ;;
+    xai)              PROVIDER_KEY_VAR="XAI_API_KEY" ;;
+    *)                PROVIDER_KEY_VAR="ZEROCLAW_API_KEY" ;;
+esac
+export "${PROVIDER_KEY_VAR}=${API_KEY}"
+
+# Write to profile so bash login shells (ttyd terminal) inherit the key
+cat > /etc/profile.d/zeroclaw-api.sh <<EOF
+export ZEROCLAW_API_KEY="${API_KEY}"
+export ${PROVIDER_KEY_VAR}="${API_KEY}"
+EOF
 
 # ── Timezone ──────────────────────────────────────────────────────────────────
 if [ -f "/usr/share/zoneinfo/${TIMEZONE}" ]; then
