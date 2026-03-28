@@ -1,7 +1,19 @@
 configuration:
   provider:
     name: "AI Provider"
-    description: "The AI provider to use (e.g. gemini, openai, anthropic). Used only for the initial setup — change it later via the Web UI terminal."
+    description: "The AI provider to use. Choose 'other' for providers not listed (configure via terminal)."
   api_key:
     name: "API Key"
-    description: "Your API key for the chosen provider. Used only for the initial setup."
+    description: "Your API key for the selected provider. For Gemini: console.cloud.google.com. For OpenAI: platform.openai.com."
+  model:
+    name: "Model"
+    description: "The model to use. Examples: gemini-2.0-flash, gpt-4o, claude-3-5-sonnet-20241022, mistral-large-latest."
+  timezone:
+    name: "Timezone"
+    description: "Timezone for cron scheduling. Use IANA format, e.g. Europe/Rome, America/New_York, Asia/Tokyo."
+  telegram_token:
+    name: "Telegram Bot Token"
+    description: "Optional. Create a bot via @BotFather on Telegram and paste the token here."
+  telegram_allowed_users:
+    name: "Telegram Allowed Users"
+    description: "Comma-separated Telegram user IDs or usernames allowed to interact. Use * to allow everyone (not recommended)."

@@ -2,21 +2,85 @@
 # shellcheck shell=bash
 set -e
 
+# ── Paths ────────────────────────────────────────────────────────────────────
 export HOME="/data/zeroclaw"
-mkdir -p "${HOME}/workspace"
+CONFIG_FILE="${HOME}/.zeroclaw/config.toml"
+mkdir -p "${HOME}/.zeroclaw" "${HOME}/workspace"
 
-# If no config exists yet, run onboard with the provided credentials
-if [ ! -f "${HOME}/.zeroclaw/config.toml" ]; then
-    bashio::log.info "No config found, running initial onboard..."
-    PROVIDER=$(bashio::config 'provider')
-    API_KEY=$(bashio::config 'api_key')
-    /usr/local/bin/zeroclaw onboard \
-        --provider "${PROVIDER}" \
-        --api-key "${API_KEY}" \
-        --memory markdown \
-        --force
-    bashio::log.info "Onboard complete. Use the Web UI terminal for further configuration."
+# ── Validate required options ─────────────────────────────────────────────────
+PROVIDER=$(bashio::config 'provider')
+API_KEY=$(bashio::config 'api_key')
+
+if bashio::var.is_empty "${API_KEY}"; then
+    bashio::log.fatal "API key is required. Set it in the add-on configuration."
+    exit 1
 fi
 
-bashio::log.info "Starting ZeroClaw daemon..."
+MODEL=$(bashio::config 'model')
+TIMEZONE=$(bashio::config 'timezone')
+
+# ── First-run: bootstrap config via zeroclaw onboard ─────────────────────────
+if [ ! -f "${CONFIG_FILE}" ]; then
+    bashio::log.info "First start detected — running initial setup..."
+
+    PROVIDER_ARG="${PROVIDER}"
+    # 'other' is a UI placeholder; let onboard use the key without --provider
+    if [ "${PROVIDER_ARG}" = "other" ]; then
+        PROVIDER_ARG=""
+    fi
+
+    if [ -n "${PROVIDER_ARG}" ]; then
+        /usr/local/bin/zeroclaw onboard \
+            --provider "${PROVIDER_ARG}" \
+            --api-key "${API_KEY}" \
+            --model "${MODEL}" \
+            --memory markdown \
+            --force
+    else
+        /usr/local/bin/zeroclaw onboard \
+            --api-key "${API_KEY}" \
+            --memory markdown \
+            --force
+    fi
+
+    bashio::log.info "Setup complete."
+fi
+
+# ── Timezone ──────────────────────────────────────────────────────────────────
+if [ -f "/usr/share/zoneinfo/${TIMEZONE}" ]; then
+    ln -sf "/usr/share/zoneinfo/${TIMEZONE}" /etc/localtime
+    echo "${TIMEZONE}" > /etc/timezone
+    bashio::log.info "Timezone set to ${TIMEZONE}"
+else
+    bashio::log.warning "Unknown timezone '${TIMEZONE}', falling back to UTC."
+fi
+
+# ── Telegram integration ───────────────────────────────────────────────────────
+if bashio::config.has_value 'telegram_token'; then
+    TOKEN=$(bashio::config 'telegram_token')
+    ALLOWED=$(bashio::config 'telegram_allowed_users')
+
+    # Build allowed_users array: "*" becomes ["*"], else split CSV into array
+    if [ "${ALLOWED}" = "*" ]; then
+        ALLOWED_TOML='["*"]'
+    else
+        ALLOWED_TOML="[$(echo "${ALLOWED}" | sed 's/,/","/g; s/^/"/; s/$/"/' )]"
+    fi
+
+    # Inject or update [channels_config.telegram] block in config.toml
+    if grep -q '\[channels_config\.telegram\]' "${CONFIG_FILE}" 2>/dev/null; then
+        bashio::log.info "Telegram config already present — skipping injection."
+    else
+        bashio::log.info "Injecting Telegram channel configuration..."
+        cat >> "${CONFIG_FILE}" <<EOF
+
+[channels_config.telegram]
+bot_token = "${TOKEN}"
+allowed_users = ${ALLOWED_TOML}
+EOF
+    fi
+fi
+
+# ── Start daemon ──────────────────────────────────────────────────────────────
+bashio::log.info "Starting ZeroClaw daemon (provider=${PROVIDER}, model=${MODEL})..."
 exec /usr/local/bin/zeroclaw daemon

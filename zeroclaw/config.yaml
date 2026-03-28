@@ -1,7 +1,7 @@
 name: "ZeroClaw"
 version: "0.6.5"
 slug: "zeroclaw"
-description: "AI daemon with tools, memory, cron, and workspace"
+description: "Lightweight AI daemon with persistent memory, tools, cron scheduling, and messaging integrations"
 url: "https://www.zeroclawlabs.ai"
 arch:
   - aarch64
@@ -9,15 +9,29 @@ arch:
 startup: services
 boot: auto
 init: false
+
 options:
   provider: gemini
   api_key: ""
+  model: gemini-2.0-flash
+  timezone: UTC
+  telegram_token: ""
+  telegram_allowed_users: "*"
+
 schema:
-  provider: str
+  provider: list(gemini|openai|anthropic|openrouter|mistral|groq|deepseek|xai|ollama|other)
   api_key: password
+  model: str
+  timezone: str
+  telegram_token: str?
+  telegram_allowed_users: str?
+
 map:
   - data
 ingress: true
 ingress_port: 7681
-homeassistant_api: false
+panel_title: ZeroClaw Terminal
+panel_icon: mdi:robot
+
 hassio_api: false
+homeassistant_api: false
