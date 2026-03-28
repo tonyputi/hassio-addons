@@ -1,13 +1,20 @@
 ARG BUILD_FROM
-FROM $BUILD_FROM
+FROM ${BUILD_FROM}
 
 ARG BUILD_ARCH
 ARG ZEROCLAW_VERSION="0.6.5"
 
-# Install dependencies
-RUN apk add --no-cache curl ca-certificates tar ttyd
+# Install base dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        bash \
+        curl \
+        ca-certificates \
+        tar \
+        tzdata \
+        jq \
+    && rm -rf /var/lib/apt/lists/*
 
-# Download and extract pre-built ZeroClaw binary for the target arch
+# Download and extract ZeroClaw pre-built binary (glibc, compatible with Debian base)
 RUN case "${BUILD_ARCH}" in \
       aarch64) ARCH="aarch64-unknown-linux-gnu" ;; \
       amd64)   ARCH="x86_64-unknown-linux-gnu" ;; \
@@ -17,6 +24,17 @@ RUN case "${BUILD_ARCH}" in \
       "https://github.com/zeroclaw-labs/zeroclaw/releases/download/v${ZEROCLAW_VERSION}/zeroclaw-${ARCH}.tar.gz" \
       | tar -xz -C /usr/local/bin zeroclaw && \
     chmod +x /usr/local/bin/zeroclaw
+
+# Download ttyd binary (not in Debian repos)
+RUN case "${BUILD_ARCH}" in \
+      aarch64) TTYD_ARCH="aarch64" ;; \
+      amd64)   TTYD_ARCH="x86_64" ;; \
+      *) echo "Unsupported arch: ${BUILD_ARCH}" && exit 1 ;; \
+    esac && \
+    curl -fsSL \
+      "https://github.com/tsl0922/ttyd/releases/download/1.7.7/ttyd.${TTYD_ARCH}" \
+      -o /usr/local/bin/ttyd && \
+    chmod +x /usr/local/bin/ttyd
 
 # Copy S6-overlay services and scripts
 COPY rootfs /

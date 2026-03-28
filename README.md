@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="zeroclaw/icon.png" alt="ZeroClaw" width="120" />
+  <img src="zeroclaw/icon.png" alt="ZeroClaw" width="96" />
 </p>
 
 <h1 align="center">ZeroClaw Add-ons for Home Assistant</h1>
@@ -8,35 +8,40 @@
   <a href="https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Ftonyputi%2Fhassio-addons">
     <img src="https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg" alt="Add to Home Assistant" />
   </a>
+  &nbsp;
+  <img src="https://img.shields.io/badge/ZeroClaw-v0.6.5-blue" />
+  &nbsp;
+  <img src="https://img.shields.io/badge/Raspberry%20Pi-supported-brightgreen" />
+  &nbsp;
+  <img src="https://img.shields.io/badge/amd64-supported-brightgreen" />
 </p>
 
 <p align="center">
-  Bring the power of <a href="https://www.zeroclawlabs.ai">ZeroClaw</a> to your Home Assistant instance.<br/>
-  A lightweight AI daemon with persistent memory, tools, cron scheduling, and Telegram integration.
+  Official community add-ons to run <a href="https://www.zeroclawlabs.ai"><strong>ZeroClaw</strong></a> on Home Assistant.<br/>
+  A lightweight AI daemon with persistent memory, scheduling, tools, and messaging integrations.
 </p>
 
 ---
 
 ## Add-ons
 
-### ![ZeroClaw](https://img.shields.io/badge/ZeroClaw-v0.6.5-blue?logo=rust) &nbsp; ZeroClaw
+### ZeroClaw
 
-> AI daemon for your smart home — no cloud required, no compilation, no waiting.
+Run ZeroClaw as a supervised Home Assistant add-on. Pre-built binaries are downloaded at install time — no compilation, no waiting, no build failures.
 
-![aarch64](https://img.shields.io/badge/Raspberry%20Pi%20(aarch64)-supported-brightgreen)
-![amd64](https://img.shields.io/badge/amd64-supported-brightgreen)
+**Works on Raspberry Pi (aarch64) and standard x86_64 machines.**
 
-Run ZeroClaw as a managed Home Assistant add-on. The add-on downloads pre-built binaries at install time — no Rust toolchain, no 20-minute compilation. Just install and go.
+#### Features
 
-**What ZeroClaw can do on your Home Assistant device:**
+- **No compilation** — installs in under 30 seconds on any supported device
+- **Multiple AI providers** — Gemini, OpenAI, Anthropic, Mistral, Groq, DeepSeek, and more
+- **Persistent memory and workspace** — data survives restarts and updates
+- **Telegram integration** — chat with your AI directly from your phone
+- **Cron scheduling** — automate tasks with timezone-aware scheduling
+- **Web terminal** — browser-based terminal via Home Assistant ingress for advanced configuration
+- **S6-overlay supervision** — automatic process restart on failure
 
-- Browse the web, search, and fetch pages with built-in tools
-- Remember things across conversations with persistent memory
-- Execute scheduled tasks with cron-style scheduling
-- Chat via Telegram (send it a message, it replies intelligently)
-- Read and write files in its workspace for custom instructions and personas
-
-[Full documentation →](zeroclaw/DOCS.md) | [Changelog →](zeroclaw/CHANGELOG.md)
+[Documentation](zeroclaw/DOCS.md) · [Changelog](zeroclaw/CHANGELOG.md) · [ZeroClaw website](https://www.zeroclawlabs.ai)
 
 ---
 
@@ -50,35 +55,37 @@ Run ZeroClaw as a managed Home Assistant add-on. The add-on downloads pre-built 
 
 ### Manual
 
-1. In Home Assistant: **Settings → Add-ons → Add-on Store → ⋮ → Repositories**
-2. Add this URL: `https://github.com/tonyputi/hassio-addons`
-3. Find **ZeroClaw** in the store → Install → Configure → Start
+1. In Home Assistant go to **Settings → Add-ons → Add-on Store**
+2. Click **⋮ → Repositories** and add: `https://github.com/tonyputi/hassio-addons`
+3. Find **ZeroClaw** in the store → **Install**
+4. Set your **provider** and **API key** in the Configuration tab
+5. Click **Start**
 
-### Configuration
+### Minimal configuration
 
-| Option | Required | Default | Description |
-| ------ | :------: | ------- | ----------- |
-| `provider` | ✓ | `gemini` | AI provider: `gemini`, `openai`, `anthropic` |
-| `api_key` | ✓ | | API key for the chosen provider |
-| `model` | ✓ | `gemini-2.0-flash` | Model to use |
-| `autonomy_mode` | ✓ | `semi` | `full` · `semi` · `manual` |
-| `telegram_token` | | | Telegram bot token |
-| `telegram_chat_id` | | | Telegram chat/user ID |
+| Option | Required | Description |
+| ------ | :------: | ----------- |
+| `provider` | ✓ | AI provider (Gemini, OpenAI, Anthropic, …) |
+| `api_key` | ✓ | API key for the chosen provider |
+| `model` | ✓ | Model to use (e.g. `gemini-2.0-flash`, `gpt-4o`) |
+| `timezone` | ✓ | IANA timezone for cron jobs (e.g. `Europe/Rome`) |
+| `telegram_token` | | Telegram bot token — create one via [@BotFather](https://t.me/BotFather) |
+| `telegram_allowed_users` | | Comma-separated user IDs/usernames, or `*` for everyone |
 
-Persistent data (config, workspace, memory) lives at `/data/zeroclaw/` and survives restarts and updates.
+Persistent data lives at `/data/zeroclaw/`. Use the **Web terminal** (ZeroClaw Terminal tab) for advanced configuration such as additional providers, channels, or workspace customization.
 
 ---
 
-## Why this add-on?
+## Why not the existing community add-on?
 
-The existing community add-on compiles ZeroClaw from Rust source — that means **20+ minutes** of build time on a Raspberry Pi, high memory usage, and frequent build failures on constrained devices. This add-on uses official pre-built binaries from the [ZeroClaw GitHub releases](https://github.com/zeroclaw-labs/zeroclaw/releases), so installation is **under 30 seconds** on any supported device.
-
-| | SeoFood/hassio-addons-zeroclaw | This add-on |
+| | [SeoFood/hassio-addons-zeroclaw](https://github.com/SeoFood/hassio-addons-zeroclaw) | This add-on |
 | -- | :---: | :---: |
-| Install time on RPi | ~20 min | ~30 sec |
-| Compiles from source | yes | no |
+| Install time on Raspberry Pi | ~20 min | ~30 sec |
+| Compiles from Rust source | yes | no |
 | ZeroClaw version | 0.1.x | 0.6.5 |
-| Telegram config in UI | no | yes |
+| Base image | Debian | Debian |
+| Telegram configuration | manual | built-in |
+| Web terminal | no | yes |
 | S6-overlay supervision | no | yes |
 
 ---
