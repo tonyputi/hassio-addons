@@ -79,9 +79,9 @@ else
 fi
 
 # ── Telegram integration ───────────────────────────────────────────────────────
-if bashio::config.has_value 'telegram_token'; then
-    TOKEN=$(bashio::config 'telegram_token')
-    ALLOWED=$(bashio::config 'telegram_allowed_users')
+TOKEN=$(bashio::config 'telegram_token')
+ALLOWED=$(bashio::config 'telegram_allowed_users')
+if [ -n "${TOKEN}" ]; then
 
     # Build allowed_users array: "*" becomes ["*"], else split CSV into array
     if [ "${ALLOWED}" = "*" ]; then

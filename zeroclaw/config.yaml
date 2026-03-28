@@ -23,8 +23,8 @@ schema:
   api_key: password
   model: str
   timezone: str
-  telegram_token: str?
-  telegram_allowed_users: str?
+  telegram_token: str
+  telegram_allowed_users: str
 
 map:
   - data
