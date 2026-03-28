@@ -1,5 +1,6 @@
 export HOME="/data/zeroclaw"
 export PATH="/usr/local/bin:${PATH}"
+cd "${HOME}" || true
 
 cat <<'EOF'
  ______              ___  _
