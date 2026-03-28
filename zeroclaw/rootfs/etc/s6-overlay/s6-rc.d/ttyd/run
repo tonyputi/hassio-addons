@@ -1,0 +1,12 @@
+#!/command/with-contenv bashio
+# shellcheck shell=bash
+set -e
+
+export HOME="/data/zeroclaw"
+
+bashio::log.info "Starting ttyd web terminal on port 7681..."
+exec ttyd \
+    --port 7681 \
+    --interface 0.0.0.0 \
+    --writable \
+    /usr/local/bin/zeroclaw agent

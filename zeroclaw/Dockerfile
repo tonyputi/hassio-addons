@@ -5,7 +5,7 @@ ARG BUILD_ARCH
 ARG ZEROCLAW_VERSION="0.6.5"
 
 # Install dependencies
-RUN apk add --no-cache curl ca-certificates tar
+RUN apk add --no-cache curl ca-certificates tar ttyd
 
 # Download and extract pre-built ZeroClaw binary for the target arch
 RUN case "${BUILD_ARCH}" in \
