@@ -48,6 +48,8 @@ RUN case "${BUILD_ARCH}" in \
       -o /usr/local/bin/lightpanda && \
     chmod +x /usr/local/bin/lightpanda
 
+# Cache-bust: increment when rootfs scripts change to force layer rebuild
+ARG ROOTFS_VERSION=2
 # Copy S6-overlay services and scripts
 COPY rootfs /
 
