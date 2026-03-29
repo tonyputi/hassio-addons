@@ -154,19 +154,21 @@ PAIRING_VAL="true"
 if bashio::var.false "${GATEWAY_PAIRING}"; then PAIRING_VAL="false"; fi
 
 if grep -q '^\[gateway\]' "${CONFIG_FILE}" 2>/dev/null; then
-    sed -i '/^\[gateway\]/,/^\[/{s/^host = ".*"/host = "0.0.0.0"/}' "${CONFIG_FILE}"
+    sed -i '/^\[gateway\]/,/^\[/{s/^host = ".*"/host = "127.0.0.1"/}' "${CONFIG_FILE}"
+    sed -i '/^\[gateway\]/,/^\[/{s/^port = .*/port = 42618/}' "${CONFIG_FILE}"
     sed -i '/^\[gateway\]/,/^\[/{s/^allow_public_bind = .*$/allow_public_bind = true/}' "${CONFIG_FILE}"
     sed -i '/^\[gateway\]/,/^\[/{s/^require_pairing = .*$/require_pairing = '"${PAIRING_VAL}"'/}' "${CONFIG_FILE}"
 else
     cat >> "${CONFIG_FILE}" <<EOF
 
 [gateway]
-host = "0.0.0.0"
+host = "127.0.0.1"
+port = 42618
 allow_public_bind = true
 require_pairing = ${PAIRING_VAL}
 EOF
 fi
-bashio::log.info "Gateway configured (bind=0.0.0.0, pairing=${PAIRING_VAL})."
+bashio::log.info "Gateway configured (port=42618, pairing=${PAIRING_VAL}). nginx proxies on 42617."
 
 # ── Start daemon ──────────────────────────────────────────────────────────────
 bashio::log.info "Starting ZeroClaw daemon (provider=${PROVIDER}, model=${MODEL})..."
