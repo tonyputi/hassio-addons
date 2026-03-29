@@ -13,15 +13,10 @@ API_KEY=$(bashio::config 'api_key')
 MODEL=$(bashio::config 'model')
 TIMEZONE=$(bashio::config 'timezone')
 
-# ── Validate API key (with fallback to stored config on reinstall) ────────────
+# ── Validate required options ─────────────────────────────────────────────────
 if bashio::var.is_empty "${API_KEY}"; then
-    if [ -f "${CONFIG_FILE}" ] && grep -q '^api_key = ' "${CONFIG_FILE}"; then
-        bashio::log.info "API key not set in UI — using stored key from config.toml (reinstall detected)."
-        API_KEY=""  # zeroclaw reads it from config.toml directly
-    else
-        bashio::log.fatal "API key is required. Set it in the add-on configuration."
-        exit 1
-    fi
+    bashio::log.fatal "API key is required. Set it in the add-on configuration."
+    exit 1
 fi
 
 # ── First-run: bootstrap config via zeroclaw onboard ─────────────────────────
