@@ -37,6 +37,17 @@ RUN case "${BUILD_ARCH}" in \
       -o /usr/local/bin/ttyd && \
     chmod +x /usr/local/bin/ttyd
 
+# Download Lightpanda headless browser (enables ZeroClaw browser tool)
+RUN case "${BUILD_ARCH}" in \
+      aarch64) LP_ARCH="aarch64" ;; \
+      amd64)   LP_ARCH="x86_64" ;; \
+      *) echo "Unsupported arch: ${BUILD_ARCH}" && exit 1 ;; \
+    esac && \
+    curl -fsSL \
+      "https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-${LP_ARCH}-linux" \
+      -o /usr/local/bin/lightpanda && \
+    chmod +x /usr/local/bin/lightpanda
+
 # Copy S6-overlay services and scripts
 COPY rootfs /
 

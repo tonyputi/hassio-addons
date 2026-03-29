@@ -1,0 +1,5 @@
+#!/command/with-contenv bashio
+# shellcheck shell=bash
+set -e
+bashio::log.info "Starting Lightpanda headless browser on port 9515..."
+exec /usr/local/bin/lightpanda serve --host 127.0.0.1 --port 9515
