@@ -1,0 +1,65 @@
+#!/command/with-contenv bashio
+# shellcheck shell=bash
+set -e
+
+# ── Paths ─────────────────────────────────────────────────────────────────────
+export HOME="/share/picoclaw"
+CONFIG_FILE="${HOME}/.picoclaw/config.json"
+mkdir -p "${HOME}/.picoclaw"
+
+# ── Read options ──────────────────────────────────────────────────────────────
+PROVIDER=$(bashio::config 'provider')
+API_KEY=$(bashio::config 'api_key')
+MODEL=$(bashio::config 'model')
+TIMEZONE=$(bashio::config 'timezone')
+TOKEN=$(bashio::config 'telegram_token')
+
+# ── Validate required options ─────────────────────────────────────────────────
+if bashio::var.is_empty "${API_KEY}"; then
+    bashio::log.fatal "API key is required. Set it in the add-on configuration."
+    exit 1
+fi
+
+# ── Timezone ──────────────────────────────────────────────────────────────────
+if [ -f "/usr/share/zoneinfo/${TIMEZONE}" ]; then
+    ln -sf "/usr/share/zoneinfo/${TIMEZONE}" /etc/localtime
+    echo "${TIMEZONE}" > /etc/timezone
+    export TZ="${TIMEZONE}"
+    bashio::log.info "Timezone set to ${TIMEZONE}"
+else
+    bashio::log.warning "Unknown timezone '${TIMEZONE}', falling back to UTC."
+fi
+
+# ── Export API key env vars ───────────────────────────────────────────────────
+export PICOCLAW_API_KEY="${API_KEY}"
+case "${PROVIDER}" in
+    gemini|google)    export GEMINI_API_KEY="${API_KEY}" ;;
+    openai)           export OPENAI_API_KEY="${API_KEY}" ;;
+    anthropic)        export ANTHROPIC_API_KEY="${API_KEY}" ;;
+    openrouter)       export OPENROUTER_API_KEY="${API_KEY}" ;;
+    mistral)          export MISTRAL_API_KEY="${API_KEY}" ;;
+    groq)             export GROQ_API_KEY="${API_KEY}" ;;
+    deepseek)         export DEEPSEEK_API_KEY="${API_KEY}" ;;
+    xai)              export XAI_API_KEY="${API_KEY}" ;;
+esac
+
+# ── Telegram env var ──────────────────────────────────────────────────────────
+if [ -n "${TOKEN}" ]; then
+    export TELEGRAM_BOT_TOKEN="${TOKEN}"
+fi
+
+# ── First-run: bootstrap config via picoclaw onboard ─────────────────────────
+if [ ! -f "${CONFIG_FILE}" ]; then
+    bashio::log.info "First start detected — running initial setup..."
+    /usr/local/bin/picoclaw onboard --non-interactive 2>/dev/null || \
+    /usr/local/bin/picoclaw onboard || true
+    bashio::log.info "Setup complete."
+fi
+
+# ── Bind WebUI to all interfaces for HA ingress ───────────────────────────────
+export PICOCLAW_LAUNCHER_HOST="0.0.0.0"
+export PICOCLAW_GATEWAY_HOST="0.0.0.0"
+
+# ── Start gateway ─────────────────────────────────────────────────────────────
+bashio::log.info "Starting PicoClaw gateway (provider=${PROVIDER}, model=${MODEL})..."
+exec /usr/local/bin/picoclaw gateway

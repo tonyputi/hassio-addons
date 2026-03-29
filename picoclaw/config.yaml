@@ -1,0 +1,37 @@
+name: "PicoClaw"
+version: "0.2.4"
+slug: "picoclaw"
+description: "Ultra-lightweight AI agent with 30+ LLM providers and 16 messaging platforms"
+url: "https://github.com/sipeed/picoclaw"
+arch:
+  - aarch64
+  - amd64
+startup: services
+boot: manual
+init: false
+
+options:
+  provider: gemini
+  api_key: ""
+  model: gemini-2.0-flash
+  timezone: UTC
+  telegram_token: ""
+  telegram_allowed_users: "*"
+
+schema:
+  provider: list(gemini|openai|anthropic|openrouter|mistral|groq|deepseek|xai|ollama|other)
+  api_key: password
+  model: str
+  timezone: str
+  telegram_token: str
+  telegram_allowed_users: str
+
+map:
+  - share:rw
+ingress: true
+ingress_port: 18800
+panel_title: PicoClaw
+panel_icon: mdi:robot-outline
+
+hassio_api: true
+homeassistant_api: true
