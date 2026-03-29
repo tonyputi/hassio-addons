@@ -15,7 +15,12 @@ TIMEZONE=$(bashio::config 'timezone')
 TOKEN=$(bashio::config 'telegram_token')
 ALLOWED=$(bashio::config 'telegram_allowed_users')
 
-# ── Validate required options ─────────────────────────────────────────────────
+# ── Validate required options (with file fallback) ───────────────────────────
+API_KEY_FILE="${HOME}/.picoclaw/.api_key"
+if bashio::var.is_empty "${API_KEY}" && [ -f "${API_KEY_FILE}" ]; then
+    API_KEY=$(cat "${API_KEY_FILE}")
+    bashio::log.info "API key loaded from file fallback."
+fi
 if bashio::var.is_empty "${API_KEY}"; then
     bashio::log.fatal "API key is required. Set it in the add-on configuration."
     exit 1
