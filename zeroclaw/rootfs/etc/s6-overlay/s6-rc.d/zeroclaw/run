@@ -120,14 +120,15 @@ if bashio::var.true "${HA_MCP_ENABLED}"; then
     if grep -q '^\[mcp\]' "${CONFIG_FILE}" 2>/dev/null; then
         # onboard sets enabled = false and servers = [] — fix both
         sed -i '/^\[mcp\]/,/^\[/{s/^enabled = false$/enabled = true/}' "${CONFIG_FILE}"
+        sed -i '/^\[mcp\]/,/^\[/{s/^deferred_loading = true$/deferred_loading = false/}' "${CONFIG_FILE}"
         sed -i '/^servers = \[\]$/d' "${CONFIG_FILE}"
-        bashio::log.info "MCP section updated: enabled = true."
+        bashio::log.info "MCP section updated: enabled = true, deferred_loading = false."
     else
         cat >> "${CONFIG_FILE}" <<EOF
 
 [mcp]
 enabled = true
-deferred_loading = true
+deferred_loading = false
 EOF
     fi
 
