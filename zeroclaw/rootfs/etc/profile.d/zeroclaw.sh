@@ -1,4 +1,4 @@
-export HOME="/data/zeroclaw"
+export HOME="/addon_config"
 export SHELL="/bin/bash"
 export PATH="/usr/local/bin:${PATH}"
 cd "${HOME}" || true
@@ -20,7 +20,7 @@ ZeroClaw container shell. Available commands:
   zeroclaw channel list   List configured channels
   zeroclaw doctor         Run diagnostics
 
-  Config:  /data/zeroclaw/.zeroclaw/config.toml
-  Workspace: /data/zeroclaw/workspace/
+  Config:  /addon_config/.zeroclaw/config.toml
+  Workspace: /addon_config/workspace/
 
 EOF

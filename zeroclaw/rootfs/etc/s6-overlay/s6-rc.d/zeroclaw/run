@@ -3,7 +3,7 @@
 set -e
 
 # ── Paths ────────────────────────────────────────────────────────────────────
-export HOME="/data/zeroclaw"
+export HOME="/addon_config"
 CONFIG_FILE="${HOME}/.zeroclaw/config.toml"
 mkdir -p "${HOME}/.zeroclaw" "${HOME}/workspace"
 
