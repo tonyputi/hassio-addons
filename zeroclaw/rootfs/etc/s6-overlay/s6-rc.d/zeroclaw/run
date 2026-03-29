@@ -124,6 +124,11 @@ deferred_loading = false
 EOF
     fi
 
+    # Allow MCP calls without approval (medium risk) while keeping high-risk blocked
+    if grep -q '^\[autonomy\]' "${CONFIG_FILE}" 2>/dev/null; then
+        sed -i '/^\[autonomy\]/,/^\[/{s/^require_approval_for_medium_risk = true$/require_approval_for_medium_risk = false/}' "${CONFIG_FILE}"
+    fi
+
     # Use HA-provided supervisor token — no manual token required
     HA_TOKEN="${SUPERVISOR_TOKEN}"
     bashio::log.info "Writing Home Assistant MCP server configuration..."
