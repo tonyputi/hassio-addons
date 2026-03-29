@@ -85,6 +85,52 @@ else
     bashio::log.warning "Unknown timezone '${TIMEZONE}', falling back to UTC."
 fi
 
+# ── Read channel / MCP options ────────────────────────────────────────────────
+TOKEN=$(bashio::config 'telegram_token')
+ALLOWED=$(bashio::config 'telegram_allowed_users')
+HA_MCP_ENABLED=$(bashio::config 'ha_mcp_enabled')
+
+# ── Reinstall detection: restore HA form from config.toml ────────────────────
+# After an uninstall/reinstall the HA form is empty but config.toml survives in
+# /share/zeroclaw. Detect this and write the saved values back to the HA UI so
+# the user never has to re-enter them manually.
+RESTORE_NEEDED=false
+
+if [ -z "${TOKEN}" ] && [ -f "${CONFIG_FILE}" ] && \
+   grep -q '^bot_token = ' "${CONFIG_FILE}" 2>/dev/null; then
+    TOKEN=$(sed -n 's/^bot_token = "\(.*\)"/\1/p' "${CONFIG_FILE}" | head -1 || true)
+    if [ -n "${TOKEN}" ]; then
+        ALLOWED_RAW=$(sed -n 's/^allowed_users = \[\(.*\)\]/\1/p' "${CONFIG_FILE}" | head -1 || true)
+        ALLOWED=$(echo "${ALLOWED_RAW}" | tr -d '"' | tr -d ' ')
+        [ -z "${ALLOWED}" ] && ALLOWED="*"
+        RESTORE_NEEDED=true
+    fi
+fi
+
+if ! bashio::var.true "${HA_MCP_ENABLED}" && \
+   grep -q 'name = "home-assistant"' "${CONFIG_FILE}" 2>/dev/null; then
+    HA_MCP_ENABLED=true
+    RESTORE_NEEDED=true
+fi
+
+if [ "${RESTORE_NEEDED}" = "true" ]; then
+    bashio::log.info "Reinstall detected — restoring HA form options from config.toml..."
+    if bashio::var.true "${HA_MCP_ENABLED}"; then MCP_BOOL=true; else MCP_BOOL=false; fi
+    OPTIONS=$(jq -n \
+        --arg  provider "${PROVIDER}" \
+        --arg  model    "${MODEL}" \
+        --arg  tz       "${TIMEZONE}" \
+        --arg  token    "${TOKEN}" \
+        --arg  allowed  "${ALLOWED}" \
+        --argjson mcp   "${MCP_BOOL}" \
+        '{options:{provider:$provider,api_key:"",model:$model,timezone:$tz,
+          telegram_token:$token,telegram_allowed_users:$allowed,ha_mcp_enabled:$mcp}}')
+    curl -sS -X POST "http://supervisor/addons/self/options" \
+        -H "Authorization: Bearer ${SUPERVISOR_TOKEN}" \
+        -H "Content-Type: application/json" \
+        -d "${OPTIONS}" || bashio::log.warning "Could not restore HA form options."
+fi
+
 # ── Remove managed sections before re-injection ───────────────────────────────
 # Telegram and MCP server entries are always appended at the end of config.toml.
 # Truncate at the first managed section marker so they are rewritten on every
@@ -99,8 +145,6 @@ for marker in '^\[channels_config\.telegram\]' '^\[\[mcp\.servers\]\]'; do
 done
 
 # ── Telegram integration ───────────────────────────────────────────────────────
-TOKEN=$(bashio::config 'telegram_token')
-ALLOWED=$(bashio::config 'telegram_allowed_users')
 if [ -n "${TOKEN}" ]; then
     # Build allowed_users array: "*" becomes ["*"], else split CSV into array
     if [ "${ALLOWED}" = "*" ]; then
@@ -119,7 +163,6 @@ EOF
 fi
 
 # ── Home Assistant MCP integration ────────────────────────────────────────────
-HA_MCP_ENABLED=$(bashio::config 'ha_mcp_enabled')
 if bashio::var.true "${HA_MCP_ENABLED}"; then
     # Ensure [mcp] section exists with enabled = true
     if grep -q '^\[mcp\]' "${CONFIG_FILE}" 2>/dev/null; then
