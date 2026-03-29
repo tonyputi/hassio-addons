@@ -13,9 +13,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         tzdata \
         jq \
         git \
-        nginx \
-    && rm -rf /var/lib/apt/lists/* \
-    && rm -f /etc/nginx/sites-enabled/default
+    && rm -rf /var/lib/apt/lists/*
 
 # Download and extract ZeroClaw pre-built binary (glibc, compatible with Debian base)
 RUN case "${BUILD_ARCH}" in \
@@ -51,7 +49,7 @@ RUN case "${BUILD_ARCH}" in \
     chmod +x /usr/local/bin/lightpanda
 
 # Cache-bust: increment when rootfs scripts change to force layer rebuild
-ARG ROOTFS_VERSION=3
+ARG ROOTFS_VERSION=4
 # Copy S6-overlay services and scripts
 COPY rootfs /
 
@@ -59,5 +57,4 @@ COPY rootfs /
 RUN chmod +x \
     /etc/s6-overlay/s6-rc.d/zeroclaw/run \
     /etc/s6-overlay/s6-rc.d/zeroclaw/finish \
-    /etc/s6-overlay/s6-rc.d/nginx/run \
     /etc/s6-overlay/s6-rc.d/ttyd/run

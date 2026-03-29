@@ -1,3 +1,0 @@
-#!/command/with-contenv bashio
-# shellcheck shell=bash
-exec nginx -g "daemon off;" 2>&1
