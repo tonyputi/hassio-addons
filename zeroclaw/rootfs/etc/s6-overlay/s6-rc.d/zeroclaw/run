@@ -146,6 +146,22 @@ Authorization = "Bearer ${HA_TOKEN}"
 EOF
 fi
 
+# ── Gateway: bind to 0.0.0.0 for HA ingress ──────────────────────────────────
+# Ensure the web dashboard is reachable by the HA ingress proxy.
+# onboard defaults to host = "127.0.0.1" and allow_public_bind = false.
+if grep -q '^\[gateway\]' "${CONFIG_FILE}" 2>/dev/null; then
+    sed -i '/^\[gateway\]/,/^\[/{s/^host = ".*"/host = "0.0.0.0"/}' "${CONFIG_FILE}"
+    sed -i '/^\[gateway\]/,/^\[/{s/^allow_public_bind = false$/allow_public_bind = true/}' "${CONFIG_FILE}"
+else
+    cat >> "${CONFIG_FILE}" <<EOF
+
+[gateway]
+host = "0.0.0.0"
+allow_public_bind = true
+EOF
+fi
+bashio::log.info "Gateway configured to bind on 0.0.0.0."
+
 # ── Start daemon ──────────────────────────────────────────────────────────────
 bashio::log.info "Starting ZeroClaw daemon (provider=${PROVIDER}, model=${MODEL})..."
 exec /usr/local/bin/zeroclaw daemon

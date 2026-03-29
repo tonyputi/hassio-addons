@@ -1,5 +1,5 @@
 name: "ZeroClaw"
-version: "0.6.5"
+version: "0.6.5.1"
 slug: "zeroclaw"
 description: "Lightweight AI daemon with persistent memory, tools, cron scheduling, and messaging integrations"
 url: "https://www.zeroclawlabs.ai"
@@ -31,8 +31,8 @@ schema:
 map:
   - share:rw
 ingress: true
-ingress_port: 7681
-panel_title: ZeroClaw Terminal
+ingress_port: 42617
+panel_title: ZeroClaw
 panel_icon: mdi:robot
 
 hassio_api: true
