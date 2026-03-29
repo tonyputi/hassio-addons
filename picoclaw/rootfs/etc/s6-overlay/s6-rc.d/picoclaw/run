@@ -72,10 +72,14 @@ jq --arg provider    "${PROVIDER}" \
    --argjson tg_on   "${TELEGRAM_ENABLED}" \
    --argjson allowed "${ALLOWED_JSON}" \
    '
-   .agents.defaults.provider   = $provider |
-   .agents.defaults.model_name = $model |
-   .gateway.host               = "0.0.0.0" |
-   .channels.telegram.enabled  = $tg_on |
+   .agents.defaults.provider    = $provider |
+   .agents.defaults.model_name  = $model |
+   .gateway.host                = "0.0.0.0" |
+   .gateway.log_level           = "info" |
+   .channels.pico.enabled       = true |
+   .channels.pico.host          = "0.0.0.0" |
+   .channels.pico.port          = 18790 |
+   .channels.telegram.enabled   = $tg_on |
    .channels.telegram.allow_from = $allowed
    ' "${CONFIG_FILE}" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "${CONFIG_FILE}"
 
@@ -83,4 +87,4 @@ bashio::log.info "Config patched (provider=${PROVIDER}, model=${MODEL}, telegram
 
 # ── Start gateway ─────────────────────────────────────────────────────────────
 bashio::log.info "Starting PicoClaw gateway (provider=${PROVIDER}, model=${MODEL})..."
-exec /usr/local/bin/picoclaw gateway
+exec /usr/local/bin/picoclaw gateway 2>&1
