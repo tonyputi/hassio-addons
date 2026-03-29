@@ -4,6 +4,7 @@ set -e
 
 # ── Paths ────────────────────────────────────────────────────────────────────
 export HOME="/share/zeroclaw"
+export SHELL="/bin/bash"
 CONFIG_FILE="${HOME}/.zeroclaw/config.toml"
 mkdir -p "${HOME}/.zeroclaw" "${HOME}/workspace"
 
