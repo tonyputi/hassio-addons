@@ -13,6 +13,7 @@ API_KEY=$(bashio::config 'api_key')
 MODEL=$(bashio::config 'model')
 TIMEZONE=$(bashio::config 'timezone')
 TOKEN=$(bashio::config 'telegram_token')
+ALLOWED=$(bashio::config 'telegram_allowed_users')
 
 # ── Validate required options ─────────────────────────────────────────────────
 if bashio::var.is_empty "${API_KEY}"; then
@@ -51,14 +52,34 @@ fi
 # ── First-run: bootstrap config via picoclaw onboard ─────────────────────────
 if [ ! -f "${CONFIG_FILE}" ]; then
     bashio::log.info "First start detected — running initial setup..."
-    /usr/local/bin/picoclaw onboard --non-interactive 2>/dev/null || \
-    /usr/local/bin/picoclaw onboard || true
+    /usr/local/bin/picoclaw onboard 2>/dev/null || true
     bashio::log.info "Setup complete."
 fi
 
-# ── Bind WebUI to all interfaces for HA ingress ───────────────────────────────
-export PICOCLAW_LAUNCHER_HOST="0.0.0.0"
-export PICOCLAW_GATEWAY_HOST="0.0.0.0"
+# ── Patch config.json with HA UI options ─────────────────────────────────────
+# Build allowed_from array for telegram: "*" → [] (allow all), else split CSV
+if [ "${ALLOWED}" = "*" ]; then
+    ALLOWED_JSON="[]"
+else
+    ALLOWED_JSON="[$(echo "${ALLOWED}" | sed 's/,/","/g; s/^/"/; s/$/"/' )]"
+fi
+
+TELEGRAM_ENABLED="false"
+if [ -n "${TOKEN}" ]; then TELEGRAM_ENABLED="true"; fi
+
+jq --arg provider    "${PROVIDER}" \
+   --arg model       "${MODEL}" \
+   --argjson tg_on   "${TELEGRAM_ENABLED}" \
+   --argjson allowed "${ALLOWED_JSON}" \
+   '
+   .agents.defaults.provider   = $provider |
+   .agents.defaults.model_name = $model |
+   .gateway.host               = "0.0.0.0" |
+   .channels.telegram.enabled  = $tg_on |
+   .channels.telegram.allow_from = $allowed
+   ' "${CONFIG_FILE}" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "${CONFIG_FILE}"
+
+bashio::log.info "Config patched (provider=${PROVIDER}, model=${MODEL}, telegram=${TELEGRAM_ENABLED})."
 
 # ── Start gateway ─────────────────────────────────────────────────────────────
 bashio::log.info "Starting PicoClaw gateway (provider=${PROVIDER}, model=${MODEL})..."
