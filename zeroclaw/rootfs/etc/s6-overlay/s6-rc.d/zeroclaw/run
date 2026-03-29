@@ -124,8 +124,9 @@ deferred_loading = false
 EOF
     fi
 
-    # Allow MCP calls without approval (medium risk) while keeping high-risk blocked
+    # Set autonomy level to full so HA MCP calls are never blocked
     if grep -q '^\[autonomy\]' "${CONFIG_FILE}" 2>/dev/null; then
+        sed -i '/^\[autonomy\]/,/^\[/{s/^level = "supervised"$/level = "full"/}' "${CONFIG_FILE}"
         sed -i '/^\[autonomy\]/,/^\[/{s/^require_approval_for_medium_risk = true$/require_approval_for_medium_risk = false/}' "${CONFIG_FILE}"
     fi
 
