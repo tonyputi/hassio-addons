@@ -27,7 +27,7 @@ schema:
   telegram_allowed_users: str
 
 map:
-  - addon_config:rw
+  - share:rw
 ingress: true
 ingress_port: 7681
 panel_title: ZeroClaw Terminal
