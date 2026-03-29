@@ -7,17 +7,22 @@ export HOME="/share/zeroclaw"
 CONFIG_FILE="${HOME}/.zeroclaw/config.toml"
 mkdir -p "${HOME}/.zeroclaw" "${HOME}/workspace"
 
-# ── Validate required options ─────────────────────────────────────────────────
+# ── Read options ──────────────────────────────────────────────────────────────
 PROVIDER=$(bashio::config 'provider')
 API_KEY=$(bashio::config 'api_key')
-
-if bashio::var.is_empty "${API_KEY}"; then
-    bashio::log.fatal "API key is required. Set it in the add-on configuration."
-    exit 1
-fi
-
 MODEL=$(bashio::config 'model')
 TIMEZONE=$(bashio::config 'timezone')
+
+# ── Validate API key (with fallback to stored config on reinstall) ────────────
+if bashio::var.is_empty "${API_KEY}"; then
+    if [ -f "${CONFIG_FILE}" ] && grep -q '^api_key = ' "${CONFIG_FILE}"; then
+        bashio::log.info "API key not set in UI — using stored key from config.toml (reinstall detected)."
+        API_KEY=""  # zeroclaw reads it from config.toml directly
+    else
+        bashio::log.fatal "API key is required. Set it in the add-on configuration."
+        exit 1
+    fi
+fi
 
 # ── First-run: bootstrap config via zeroclaw onboard ─────────────────────────
 if [ ! -f "${CONFIG_FILE}" ]; then
@@ -47,27 +52,29 @@ if [ ! -f "${CONFIG_FILE}" ]; then
 fi
 
 # ── Export API key for daemon and write to profile for terminal sessions ──────
-export ZEROCLAW_API_KEY="${API_KEY}"
+if [ -n "${API_KEY}" ]; then
+    export ZEROCLAW_API_KEY="${API_KEY}"
 
-# Map provider to its specific env var so 'zeroclaw agent' in the terminal works
-case "${PROVIDER}" in
-    gemini|google)    PROVIDER_KEY_VAR="GEMINI_API_KEY" ;;
-    openai)           PROVIDER_KEY_VAR="OPENAI_API_KEY" ;;
-    anthropic)        PROVIDER_KEY_VAR="ANTHROPIC_API_KEY" ;;
-    openrouter)       PROVIDER_KEY_VAR="OPENROUTER_API_KEY" ;;
-    mistral)          PROVIDER_KEY_VAR="MISTRAL_API_KEY" ;;
-    groq)             PROVIDER_KEY_VAR="GROQ_API_KEY" ;;
-    deepseek)         PROVIDER_KEY_VAR="DEEPSEEK_API_KEY" ;;
-    xai)              PROVIDER_KEY_VAR="XAI_API_KEY" ;;
-    *)                PROVIDER_KEY_VAR="ZEROCLAW_API_KEY" ;;
-esac
-export "${PROVIDER_KEY_VAR}=${API_KEY}"
+    # Map provider to its specific env var so 'zeroclaw agent' in the terminal works
+    case "${PROVIDER}" in
+        gemini|google)    PROVIDER_KEY_VAR="GEMINI_API_KEY" ;;
+        openai)           PROVIDER_KEY_VAR="OPENAI_API_KEY" ;;
+        anthropic)        PROVIDER_KEY_VAR="ANTHROPIC_API_KEY" ;;
+        openrouter)       PROVIDER_KEY_VAR="OPENROUTER_API_KEY" ;;
+        mistral)          PROVIDER_KEY_VAR="MISTRAL_API_KEY" ;;
+        groq)             PROVIDER_KEY_VAR="GROQ_API_KEY" ;;
+        deepseek)         PROVIDER_KEY_VAR="DEEPSEEK_API_KEY" ;;
+        xai)              PROVIDER_KEY_VAR="XAI_API_KEY" ;;
+        *)                PROVIDER_KEY_VAR="ZEROCLAW_API_KEY" ;;
+    esac
+    export "${PROVIDER_KEY_VAR}=${API_KEY}"
 
-# Write to profile so bash login shells (ttyd terminal) inherit the key
-cat > /etc/profile.d/zeroclaw-api.sh <<EOF
+    # Write to profile so bash login shells (ttyd terminal) inherit the key
+    cat > /etc/profile.d/zeroclaw-api.sh <<EOF
 export ZEROCLAW_API_KEY="${API_KEY}"
 export ${PROVIDER_KEY_VAR}="${API_KEY}"
 EOF
+fi
 
 # ── Timezone ──────────────────────────────────────────────────────────────────
 if [ -f "/usr/share/zoneinfo/${TIMEZONE}" ]; then
@@ -78,11 +85,23 @@ else
     bashio::log.warning "Unknown timezone '${TIMEZONE}', falling back to UTC."
 fi
 
+# ── Remove managed sections before re-injection ───────────────────────────────
+# Telegram and MCP server entries are always appended at the end of config.toml.
+# Truncate at the first managed section marker so they are rewritten on every
+# start, keeping HA UI options as the single source of truth.
+# NOTE: grep exits 1 when no match — use || true to avoid aborting with set -e.
+for marker in '^\[channels_config\.telegram\]' '^\[\[mcp\.servers\]\]'; do
+    line=$(grep -n "${marker}" "${CONFIG_FILE}" 2>/dev/null | head -1 | cut -d: -f1 || true)
+    if [ -n "${line}" ] && [ "${line}" -gt 1 ]; then
+        head -n $((line - 1)) "${CONFIG_FILE}" > "${CONFIG_FILE}.tmp"
+        mv "${CONFIG_FILE}.tmp" "${CONFIG_FILE}"
+    fi
+done
+
 # ── Telegram integration ───────────────────────────────────────────────────────
 TOKEN=$(bashio::config 'telegram_token')
 ALLOWED=$(bashio::config 'telegram_allowed_users')
 if [ -n "${TOKEN}" ]; then
-
     # Build allowed_users array: "*" becomes ["*"], else split CSV into array
     if [ "${ALLOWED}" = "*" ]; then
         ALLOWED_TOML='["*"]'
@@ -90,18 +109,46 @@ if [ -n "${TOKEN}" ]; then
         ALLOWED_TOML="[$(echo "${ALLOWED}" | sed 's/,/","/g; s/^/"/; s/$/"/' )]"
     fi
 
-    # Inject or update [channels_config.telegram] block in config.toml
-    if grep -q '\[channels_config\.telegram\]' "${CONFIG_FILE}" 2>/dev/null; then
-        bashio::log.info "Telegram config already present — skipping injection."
-    else
-        bashio::log.info "Injecting Telegram channel configuration..."
-        cat >> "${CONFIG_FILE}" <<EOF
+    bashio::log.info "Writing Telegram channel configuration..."
+    cat >> "${CONFIG_FILE}" <<EOF
 
 [channels_config.telegram]
 bot_token = "${TOKEN}"
 allowed_users = ${ALLOWED_TOML}
 EOF
+fi
+
+# ── Home Assistant MCP integration ────────────────────────────────────────────
+HA_MCP_ENABLED=$(bashio::config 'ha_mcp_enabled')
+if bashio::var.true "${HA_MCP_ENABLED}"; then
+    # Ensure [mcp] section exists with enabled = true
+    if grep -q '^\[mcp\]' "${CONFIG_FILE}" 2>/dev/null; then
+        # onboard sets enabled = false and servers = [] — fix both
+        sed -i '/^\[mcp\]/,/^\[/{s/^enabled = false$/enabled = true/}' "${CONFIG_FILE}"
+        sed -i '/^servers = \[\]$/d' "${CONFIG_FILE}"
+        bashio::log.info "MCP section updated: enabled = true."
+    else
+        cat >> "${CONFIG_FILE}" <<EOF
+
+[mcp]
+enabled = true
+deferred_loading = true
+EOF
     fi
+
+    # Use HA-provided supervisor token — no manual token required
+    HA_TOKEN="${SUPERVISOR_TOKEN}"
+    bashio::log.info "Writing Home Assistant MCP server configuration..."
+    cat >> "${CONFIG_FILE}" <<EOF
+
+[[mcp.servers]]
+name = "home-assistant"
+transport = "http"
+url = "http://supervisor/core/api/mcp"
+
+[mcp.servers.headers]
+Authorization = "Bearer ${HA_TOKEN}"
+EOF
 fi
 
 # ── Start daemon ──────────────────────────────────────────────────────────────
