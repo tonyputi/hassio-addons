@@ -29,7 +29,7 @@ schema:
 map:
   - share:rw
 ingress: true
-ingress_port: 18800
+ingress_port: 18790
 panel_title: PicoClaw
 panel_icon: mdi:robot-outline
 
