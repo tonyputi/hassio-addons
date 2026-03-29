@@ -23,3 +23,6 @@ configuration:
   ha_mcp_token:
     name: "Home Assistant Long-Lived Token"
     description: "Generate one in HA under Settings → Security → Long-Lived Access Tokens. Required when MCP is enabled."
+  gateway_pairing:
+    name: "Require Dashboard Pairing"
+    description: "When enabled, the web dashboard requires a one-time pairing code on first access. Disable to allow direct access without pairing (only safe on a trusted local network)."
