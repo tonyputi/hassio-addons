@@ -1,5 +1,5 @@
 name: "PicoClaw"
-version: "0.2.4.2"
+version: "0.2.4.3"
 slug: "picoclaw"
 description: "Ultra-lightweight AI agent with 30+ LLM providers and 16 messaging platforms"
 url: "https://github.com/sipeed/picoclaw"
@@ -28,6 +28,10 @@ schema:
 
 map:
   - share:rw
+ports:
+  "18790/tcp": 18790
+ports_description:
+  "18790/tcp": "PicoClaw Gateway"
 panel_icon: mdi:robot-outline
 
 hassio_api: true
