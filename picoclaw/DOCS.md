@@ -21,7 +21,6 @@ This add-on installs PicoClaw using pre-built binaries and runs the **launcher w
 | `timezone`        | No       | `UTC`   | System timezone for cron scheduling (IANA format, e.g. `Europe/Rome`) |
 | `ha_mcp_enabled`  | No       | `false` | Allow the AI agent to read and control Home Assistant entities via MCP |
 | `tavily_api_key`  | No       | —       | Tavily API key for AI-optimized web search (see [Tavily search](#tavily-search)) |
-| `browser_enabled` | No       | `false` | Enable Lightpanda CDP browser for web automation (see [Browser](#browser)) |
 
 ## Web UI
 
@@ -59,16 +58,6 @@ The add-on uses the Supervisor token automatically — no manual token setup req
 When `tavily_api_key` is set, PicoClaw uses [Tavily](https://tavily.com) as its primary web search engine. Tavily is optimized for AI agents and can retrieve structured content from JavaScript-heavy sites (Booking.com, Airbnb, news sites, etc.) that DuckDuckGo cannot index effectively.
 
 Get a free API key at [tavily.com](https://tavily.com) and paste it in the add-on options.
-
-## Browser
-
-When `browser_enabled: true`, the add-on starts **Lightpanda** — a lightweight Rust-based CDP browser (~30MB) — as a background service. PicoClaw connects to it on `ws://127.0.0.1:9222` and can use it to:
-
-- Navigate websites and extract content
-- Fill forms and click elements
-- Render JavaScript-heavy pages
-
-> Lightpanda is a lightweight browser — complex sites with heavy anti-bot measures (Google, some airline sites) may not work reliably. For straightforward web tasks it works well.
 
 ## Web terminal
 

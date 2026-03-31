@@ -3,4 +3,3 @@ build_from:
   amd64: ghcr.io/home-assistant/amd64-base-debian:bookworm
 args:
   PICOCLAW_VERSION: "0.2.4"
-  LIGHTPANDA_VERSION: "0.2.7"

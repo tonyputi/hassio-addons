@@ -31,7 +31,6 @@
 | **Telegram** | ✓ (via HA options) | ✓ (via web UI) |
 | **Home Assistant MCP** | ✓ | ✓ |
 | **Web search** | DuckDuckGo | DuckDuckGo + Tavily (optional) |
-| **Browser automation** | ✓ Lightpanda CDP | ✓ Lightpanda CDP (optional) |
 | **Channels** | Telegram | Telegram, Discord, Matrix, Slack, IRC, and more |
 | **Best for** | Full-featured daemon with persistent memory | Ultra-lightweight, multi-channel, low-power devices |
 
@@ -90,7 +89,6 @@ An ultra-lightweight AI agent written in Go. Boots in under a second, uses less 
 - **16 messaging channels** — Telegram, Discord, Matrix, Slack, IRC, WhatsApp, and more
 - **Home Assistant MCP** — read and control entities (lights, sensors, automations) directly from chat
 - **Tavily search** — AI-optimized web search for real-world data (Booking, Airbnb, news) — optional API key
-- **Lightpanda browser** — CDP browser for web automation and content extraction — toggle in add-on options
 - **Web terminal** — built-in ttyd terminal accessible from the HA sidebar
 
 **Quick start:** Set `timezone` in the add-on options, start, then open `http://<ha-ip>:18800` to complete setup.

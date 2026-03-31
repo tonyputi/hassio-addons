@@ -3,7 +3,6 @@ FROM ${BUILD_FROM}
 
 ARG BUILD_ARCH
 ARG PICOCLAW_VERSION="0.2.4"
-ARG LIGHTPANDA_VERSION="0.2.7"
 
 # Install base dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -37,17 +36,6 @@ RUN case "${BUILD_ARCH}" in \
       -o /usr/local/bin/ttyd && \
     chmod +x /usr/local/bin/ttyd
 
-# Download Lightpanda CDP browser binary
-RUN case "${BUILD_ARCH}" in \
-      aarch64) LP_ARCH="aarch64" ;; \
-      amd64)   LP_ARCH="x86_64" ;; \
-      *) echo "Unsupported arch: ${BUILD_ARCH}" && exit 1 ;; \
-    esac && \
-    curl -fsSL \
-      "https://github.com/lightpanda-io/browser/releases/download/${LIGHTPANDA_VERSION}/lightpanda-${LP_ARCH}-linux" \
-      -o /usr/local/bin/lightpanda && \
-    chmod +x /usr/local/bin/lightpanda
-
 # Cache-bust: increment when rootfs scripts change to force layer rebuild
 ARG ROOTFS_VERSION=4
 COPY rootfs /
@@ -56,6 +44,4 @@ RUN chmod +x \
     /etc/s6-overlay/s6-rc.d/picoclaw-launcher/run \
     /etc/s6-overlay/s6-rc.d/picoclaw-launcher/finish \
     /etc/s6-overlay/s6-rc.d/ttyd/run \
-    /etc/s6-overlay/s6-rc.d/ttyd/finish \
-    /etc/s6-overlay/s6-rc.d/lightpanda/run \
-    /etc/s6-overlay/s6-rc.d/lightpanda/finish
+    /etc/s6-overlay/s6-rc.d/ttyd/finish

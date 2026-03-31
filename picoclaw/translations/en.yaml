@@ -10,8 +10,3 @@ configuration:
     description: >
       Better web search optimized for AI agents. Get a free key at tavily.com.
       Enables searching real websites like Booking, Airbnb, news articles, etc.
-  browser_enabled:
-    name: Enable Browser (Lightpanda)
-    description: >
-      Start a lightweight CDP browser (Lightpanda) for web automation tasks.
-      Allows the AI agent to navigate websites, fill forms and extract content.
