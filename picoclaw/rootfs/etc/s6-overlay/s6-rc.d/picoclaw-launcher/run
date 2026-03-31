@@ -23,11 +23,13 @@ if bashio::var.true "${HA_MCP_ENABLED}"; then
         tools: {
             mcp: {
                 enabled: true,
+                discovery: { enabled: false },
                 servers: {
                     "home-assistant": {
                         enabled: true,
                         type: "http",
                         url: "http://supervisor/core/api/mcp",
+                        deferred: false,
                         headers: {
                             Authorization: ("Bearer " + $token)
                         }
