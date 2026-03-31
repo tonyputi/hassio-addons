@@ -5,6 +5,7 @@ set -e
 export HOME="/share/picoclaw"
 export PICOCLAW_HOME="${HOME}/.picoclaw"
 
+cd "${HOME}" || true
 bashio::log.info "Starting ttyd web terminal on port 7681..."
 exec ttyd \
     --port 7681 \
