@@ -3,7 +3,7 @@ FROM ${BUILD_FROM}
 
 ARG BUILD_ARCH
 ARG PICOCLAW_VERSION="0.2.4"
-ARG LIGHTPANDA_VERSION="nightly"
+ARG LIGHTPANDA_VERSION="0.2.7"
 
 # Install base dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -44,7 +44,7 @@ RUN case "${BUILD_ARCH}" in \
       *) echo "Unsupported arch: ${BUILD_ARCH}" && exit 1 ;; \
     esac && \
     curl -fsSL \
-      "https://github.com/lightpanda-io/browser/releases/download/${LIGHTPANDA_VERSION}/lightpanda-${LP_ARCH}-linux-musl" \
+      "https://github.com/lightpanda-io/browser/releases/download/${LIGHTPANDA_VERSION}/lightpanda-${LP_ARCH}-linux" \
       -o /usr/local/bin/lightpanda && \
     chmod +x /usr/local/bin/lightpanda
 
