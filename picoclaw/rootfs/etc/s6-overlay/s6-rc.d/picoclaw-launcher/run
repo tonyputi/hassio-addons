@@ -6,26 +6,6 @@ export HOME="/share/picoclaw"
 export PICOCLAW_HOME="${HOME}/.picoclaw"
 mkdir -p "${PICOCLAW_HOME}"
 
-# ── API key ───────────────────────────────────────────────────────────────────
-API_KEY=$(bashio::config 'api_key')
-PROVIDER=$(bashio::config 'provider')
-
-if bashio::var.is_empty "${API_KEY}"; then
-    bashio::log.fatal "API key is required. Set it in the add-on configuration."
-    exit 1
-fi
-
-case "${PROVIDER}" in
-    gemini|google)    export GEMINI_API_KEY="${API_KEY}" ;;
-    openai)           export OPENAI_API_KEY="${API_KEY}" ;;
-    anthropic)        export ANTHROPIC_API_KEY="${API_KEY}" ;;
-    openrouter)       export OPENROUTER_API_KEY="${API_KEY}" ;;
-    mistral)          export MISTRAL_API_KEY="${API_KEY}" ;;
-    groq)             export GROQ_API_KEY="${API_KEY}" ;;
-    deepseek)         export DEEPSEEK_API_KEY="${API_KEY}" ;;
-    xai)              export XAI_API_KEY="${API_KEY}" ;;
-esac
-
 # ── Timezone ──────────────────────────────────────────────────────────────────
 TIMEZONE=$(bashio::config 'timezone')
 if [ -f "/usr/share/zoneinfo/${TIMEZONE}" ]; then
@@ -33,7 +13,7 @@ if [ -f "/usr/share/zoneinfo/${TIMEZONE}" ]; then
     export TZ="${TIMEZONE}"
 fi
 
-# ── Home Assistant MCP ───────────────────────────────────────────────────────
+# ── Home Assistant MCP ────────────────────────────────────────────────────────
 HA_MCP_ENABLED=$(bashio::config 'ha_mcp_enabled')
 CONFIG_FILE="${PICOCLAW_HOME}/config.json"
 
@@ -62,7 +42,6 @@ if bashio::var.true "${HA_MCP_ENABLED}"; then
             && mv "${CONFIG_FILE}.tmp" "${CONFIG_FILE}"
         bashio::log.info "Home Assistant MCP configured."
     else
-        # Config not yet created by launcher — write MCP stub, launcher will merge
         echo "${MCP_PATCH}" > "${CONFIG_FILE}"
         bashio::log.info "Home Assistant MCP config stub written (launcher will merge on first start)."
     fi

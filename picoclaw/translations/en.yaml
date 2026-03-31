@@ -1,19 +1,7 @@
 configuration:
-  provider:
-    name: LLM Provider
-    description: AI provider to use (gemini, openai, anthropic, etc.)
-  api_key:
-    name: API Key
-    description: API key for the selected provider
-  model:
-    name: Model
-    description: Model name (e.g. gemini-2.0-flash, gpt-4o, claude-3-5-sonnet)
   timezone:
     name: Timezone
     description: Timezone for cron jobs (e.g. Europe/Rome)
-  telegram_token:
-    name: Telegram Bot Token
-    description: Bot token from @BotFather (optional)
   ha_mcp_enabled:
     name: Enable Home Assistant MCP
     description: Allow the AI agent to read and control Home Assistant entities (lights, sensors, automations) via MCP.

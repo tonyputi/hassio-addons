@@ -1,5 +1,5 @@
 name: "PicoClaw"
-version: "0.2.4.8"
+version: "0.2.4.9"
 slug: "picoclaw"
 description: "Ultra-lightweight AI agent with 30+ LLM providers and 16 messaging platforms"
 url: "https://github.com/sipeed/picoclaw"
@@ -11,14 +11,10 @@ boot: manual
 init: false
 
 options:
-  provider: gemini
-  api_key: ""
   timezone: UTC
   ha_mcp_enabled: false
 
 schema:
-  provider: list(gemini|openai|anthropic|openrouter|mistral|groq|deepseek|xai|ollama|other)
-  api_key: password
   timezone: str
   ha_mcp_enabled: bool
 
