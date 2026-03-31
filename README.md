@@ -27,9 +27,11 @@
 | **Language** | Rust | Go |
 | **RAM** | ~100MB | < 10MB |
 | **Web UI** | Port 42617 (built-in dashboard) | Port 18800 (launcher) |
-| **Web terminal** | ✓ (ttyd) | — |
+| **Web terminal** | ✓ (ttyd, ingress) | ✓ (ttyd, ingress) |
 | **Telegram** | ✓ (via HA options) | ✓ (via web UI) |
 | **Home Assistant MCP** | ✓ | ✓ |
+| **Web search** | DuckDuckGo | DuckDuckGo + Tavily (optional) |
+| **Browser automation** | ✓ Lightpanda CDP | ✓ Lightpanda CDP (optional) |
 | **Channels** | Telegram | Telegram, Discord, Matrix, Slack, IRC, and more |
 | **Best for** | Full-featured daemon with persistent memory | Ultra-lightweight, multi-channel, low-power devices |
 
@@ -72,7 +74,7 @@ A full-featured AI daemon with persistent memory, workspace files, cron scheduli
 ## PicoClaw
 
 <p>
-  <img src="https://img.shields.io/badge/PicoClaw-v0.2.4-blue" />
+  <img src="https://img.shields.io/badge/PicoClaw-v0.2.4.12-blue" />
   &nbsp;
   <img src="https://img.shields.io/badge/Raspberry%20Pi-supported-brightgreen" />
   &nbsp;
@@ -82,6 +84,14 @@ A full-featured AI daemon with persistent memory, workspace files, cron scheduli
 </p>
 
 An ultra-lightweight AI agent written in Go. Boots in under a second, uses less than 10MB of RAM. Configure providers, models, and channels through the browser-based launcher UI at port 18800.
+
+**Features:**
+- **30+ LLM providers** — Gemini, OpenAI, Anthropic, DeepSeek, Groq, Ollama, and more
+- **16 messaging channels** — Telegram, Discord, Matrix, Slack, IRC, WhatsApp, and more
+- **Home Assistant MCP** — read and control entities (lights, sensors, automations) directly from chat
+- **Tavily search** — AI-optimized web search for real-world data (Booking, Airbnb, news) — optional API key
+- **Lightpanda browser** — CDP browser for web automation and content extraction — toggle in add-on options
+- **Web terminal** — built-in ttyd terminal accessible from the HA sidebar
 
 **Quick start:** Set `timezone` in the add-on options, start, then open `http://<ha-ip>:18800` to complete setup.
 
