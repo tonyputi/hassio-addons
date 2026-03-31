@@ -26,7 +26,7 @@ RUN case "${BUILD_ARCH}" in \
     chmod +x /usr/local/bin/picoclaw
 
 # Cache-bust: increment when rootfs scripts change to force layer rebuild
-ARG ROOTFS_VERSION=1
+ARG ROOTFS_VERSION=2
 COPY rootfs /
 
 RUN chmod +x \
