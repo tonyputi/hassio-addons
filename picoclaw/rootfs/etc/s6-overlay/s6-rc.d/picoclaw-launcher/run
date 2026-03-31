@@ -33,6 +33,41 @@ if [ -f "/usr/share/zoneinfo/${TIMEZONE}" ]; then
     export TZ="${TIMEZONE}"
 fi
 
+# ── Home Assistant MCP ───────────────────────────────────────────────────────
+HA_MCP_ENABLED=$(bashio::config 'ha_mcp_enabled')
+CONFIG_FILE="${PICOCLAW_HOME}/config.json"
+
+if bashio::var.true "${HA_MCP_ENABLED}"; then
+    HA_TOKEN="${SUPERVISOR_TOKEN}"
+    MCP_PATCH=$(jq -n --arg token "${HA_TOKEN}" '{
+        tools: {
+            mcp: {
+                enabled: true,
+                servers: {
+                    "home-assistant": {
+                        enabled: true,
+                        type: "http",
+                        url: "http://supervisor/core/api/mcp",
+                        headers: {
+                            Authorization: ("Bearer " + $token)
+                        }
+                    }
+                }
+            }
+        }
+    }')
+
+    if [ -f "${CONFIG_FILE}" ]; then
+        jq --argjson mcp "${MCP_PATCH}" '. * $mcp' "${CONFIG_FILE}" > "${CONFIG_FILE}.tmp" \
+            && mv "${CONFIG_FILE}.tmp" "${CONFIG_FILE}"
+        bashio::log.info "Home Assistant MCP configured."
+    else
+        # Config not yet created by launcher — write MCP stub, launcher will merge
+        echo "${MCP_PATCH}" > "${CONFIG_FILE}"
+        bashio::log.info "Home Assistant MCP config stub written (launcher will merge on first start)."
+    fi
+fi
+
 # ── Start launcher ────────────────────────────────────────────────────────────
 bashio::log.info "Starting PicoClaw launcher (web UI: port 18800)..."
 exec /usr/local/bin/picoclaw-launcher -public -no-browser 2>&1

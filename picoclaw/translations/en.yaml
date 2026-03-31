@@ -14,6 +14,6 @@ configuration:
   telegram_token:
     name: Telegram Bot Token
     description: Bot token from @BotFather (optional)
-  telegram_allowed_users:
-    name: Telegram Allowed Users
-    description: Comma-separated usernames or * for all
+  ha_mcp_enabled:
+    name: Enable Home Assistant MCP
+    description: Allow the AI agent to read and control Home Assistant entities (lights, sensors, automations) via MCP.
