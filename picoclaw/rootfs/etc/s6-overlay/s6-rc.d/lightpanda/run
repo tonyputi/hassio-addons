@@ -1,0 +1,12 @@
+#!/command/with-contenv bashio
+# shellcheck shell=bash
+set -e
+
+BROWSER_ENABLED=$(bashio::config 'browser_enabled')
+if ! bashio::var.true "${BROWSER_ENABLED}"; then
+    bashio::log.info "Browser disabled. Set browser_enabled: true in addon options to enable."
+    exec sleep infinity
+fi
+
+bashio::log.info "Starting Lightpanda CDP browser on port 9222..."
+exec /usr/local/bin/lightpanda --host 127.0.0.1 --port 9222
