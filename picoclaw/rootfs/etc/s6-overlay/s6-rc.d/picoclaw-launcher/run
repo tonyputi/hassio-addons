@@ -2,8 +2,167 @@
 # shellcheck shell=bash
 set -e
 
+# ── Paths ─────────────────────────────────────────────────────────────────────
 export HOME="/share/picoclaw"
 export PICOCLAW_HOME="${HOME}/.picoclaw"
+CONFIG_FILE="${PICOCLAW_HOME}/config.json"
+mkdir -p "${PICOCLAW_HOME}"
 
-bashio::log.info "Starting PicoClaw web launcher (port 18800)..."
+# ── Read options ──────────────────────────────────────────────────────────────
+PROVIDER=$(bashio::config 'provider')
+API_KEY=$(bashio::config 'api_key')
+MODEL=$(bashio::config 'model')
+TIMEZONE=$(bashio::config 'timezone')
+TOKEN=$(bashio::config 'telegram_token')
+ALLOWED=$(bashio::config 'telegram_allowed_users')
+
+# ── Validate required options ─────────────────────────────────────────────────
+if bashio::var.is_empty "${API_KEY}"; then
+    bashio::log.fatal "API key is required. Set it in the add-on configuration."
+    exit 1
+fi
+
+# ── Export API key env vars ───────────────────────────────────────────────────
+export PICOCLAW_API_KEY="${API_KEY}"
+case "${PROVIDER}" in
+    gemini|google)    export GEMINI_API_KEY="${API_KEY}" ;;
+    openai)           export OPENAI_API_KEY="${API_KEY}" ;;
+    anthropic)        export ANTHROPIC_API_KEY="${API_KEY}" ;;
+    openrouter)       export OPENROUTER_API_KEY="${API_KEY}" ;;
+    mistral)          export MISTRAL_API_KEY="${API_KEY}" ;;
+    groq)             export GROQ_API_KEY="${API_KEY}" ;;
+    deepseek)         export DEEPSEEK_API_KEY="${API_KEY}" ;;
+    xai)              export XAI_API_KEY="${API_KEY}" ;;
+esac
+
+if [ -n "${TOKEN}" ]; then
+    export TELEGRAM_BOT_TOKEN="${TOKEN}"
+fi
+
+# ── Timezone ──────────────────────────────────────────────────────────────────
+if [ -f "/usr/share/zoneinfo/${TIMEZONE}" ]; then
+    ln -sf "/usr/share/zoneinfo/${TIMEZONE}" /etc/localtime
+    echo "${TIMEZONE}" > /etc/timezone
+    export TZ="${TIMEZONE}"
+    bashio::log.info "Timezone set to ${TIMEZONE}"
+else
+    bashio::log.warning "Unknown timezone '${TIMEZONE}', falling back to UTC."
+fi
+
+# ── Build model_list entry per provider ───────────────────────────────────────
+case "${PROVIDER}" in
+    gemini|google)
+        MODEL_ENTRY=$(jq -n --arg mn "${MODEL}" --arg key "${API_KEY}" \
+            '{model_name: $mn, model: ("gemini/" + $mn), api_key: $key,
+              api_base: "https://generativelanguage.googleapis.com/v1beta"}')
+        ;;
+    openai)
+        MODEL_ENTRY=$(jq -n --arg mn "${MODEL}" --arg key "${API_KEY}" \
+            '{model_name: $mn, model: ("openai/" + $mn), api_key: $key,
+              api_base: "https://api.openai.com/v1"}')
+        ;;
+    anthropic)
+        MODEL_ENTRY=$(jq -n --arg mn "${MODEL}" --arg key "${API_KEY}" \
+            '{model_name: $mn, model: ("anthropic/" + $mn), api_key: $key,
+              api_base: "https://api.anthropic.com/v1"}')
+        ;;
+    openrouter)
+        MODEL_ENTRY=$(jq -n --arg mn "${MODEL}" --arg key "${API_KEY}" \
+            '{model_name: $mn, model: ("openrouter/" + $mn), api_key: $key,
+              api_base: "https://openrouter.ai/api/v1"}')
+        ;;
+    mistral)
+        MODEL_ENTRY=$(jq -n --arg mn "${MODEL}" --arg key "${API_KEY}" \
+            '{model_name: $mn, model: ("openai/" + $mn), api_key: $key,
+              api_base: "https://api.mistral.ai/v1"}')
+        ;;
+    groq)
+        MODEL_ENTRY=$(jq -n --arg mn "${MODEL}" --arg key "${API_KEY}" \
+            '{model_name: $mn, model: ("openai/" + $mn), api_key: $key,
+              api_base: "https://api.groq.com/openai/v1"}')
+        ;;
+    deepseek)
+        MODEL_ENTRY=$(jq -n --arg mn "${MODEL}" --arg key "${API_KEY}" \
+            '{model_name: $mn, model: ("openai/" + $mn), api_key: $key,
+              api_base: "https://api.deepseek.com/v1"}')
+        ;;
+    xai)
+        MODEL_ENTRY=$(jq -n --arg mn "${MODEL}" --arg key "${API_KEY}" \
+            '{model_name: $mn, model: ("openai/" + $mn), api_key: $key,
+              api_base: "https://api.x.ai/v1"}')
+        ;;
+    ollama)
+        MODEL_ENTRY=$(jq -n --arg mn "${MODEL}" \
+            '{model_name: $mn, model: ("openai/" + $mn),
+              api_base: "http://localhost:11434/v1"}')
+        ;;
+    *)
+        MODEL_ENTRY='null'
+        ;;
+esac
+
+# ── First-run: generate config.json ──────────────────────────────────────────
+if [ ! -f "${CONFIG_FILE}" ]; then
+    bashio::log.info "First start detected — generating config.json..."
+    jq -n \
+        --arg model_name    "${MODEL}" \
+        --argjson model_entry "${MODEL_ENTRY}" \
+        '{
+            agents: {
+                defaults: {
+                    workspace: "~/.picoclaw/workspace",
+                    model_name: $model_name,
+                    max_tokens: 8192,
+                    max_tool_iterations: 20,
+                    summarize_message_threshold: 20
+                }
+            },
+            model_list: (if $model_entry != null then [$model_entry] else [] end),
+            channels: {
+                telegram: { enabled: false, token: "", allow_from: [] }
+            },
+            tools: {
+                web: { enabled: true, duckduckgo: { enabled: true, max_results: 5 } },
+                cron: { enabled: true, exec_timeout_minutes: 5 },
+                exec: { enabled: true }
+            },
+            gateway: { host: "0.0.0.0", port: 18790, log_level: "info" },
+            heartbeat: { enabled: true, interval: 30 }
+        }' > "${CONFIG_FILE}"
+    bashio::log.info "Config generated."
+fi
+
+# ── Patch HA UI options on every start ───────────────────────────────────────
+if [ "${ALLOWED}" = "*" ]; then
+    ALLOWED_JSON="[]"
+else
+    ALLOWED_JSON="[$(echo "${ALLOWED}" | sed 's/,/","/g; s/^/"/; s/$/"/' )]"
+fi
+
+TELEGRAM_ENABLED="false"
+if [ -n "${TOKEN}" ]; then TELEGRAM_ENABLED="true"; fi
+
+jq --arg model_name      "${MODEL}" \
+   --argjson model_entry  "${MODEL_ENTRY}" \
+   --arg tg_token         "${TOKEN}" \
+   --argjson tg_on         "${TELEGRAM_ENABLED}" \
+   --argjson allowed       "${ALLOWED_JSON}" \
+   '
+   .agents.defaults.model_name      = $model_name |
+   .gateway.host                    = "0.0.0.0" |
+   .channels.telegram.enabled       = $tg_on |
+   .channels.telegram.token         = $tg_token |
+   .channels.telegram.allow_from    = $allowed |
+   if $model_entry != null then
+     if (.model_list | map(select(.model_name == $model_name)) | length) > 0
+     then .model_list = [.model_list[] | if .model_name == $model_name then $model_entry else . end]
+     else .model_list += [$model_entry]
+     end
+   else . end
+   ' "${CONFIG_FILE}" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "${CONFIG_FILE}"
+
+bashio::log.info "Config patched (provider=${PROVIDER}, model=${MODEL}, telegram=${TELEGRAM_ENABLED})."
+
+# ── Start launcher (includes gateway internally) ──────────────────────────────
+bashio::log.info "Starting PicoClaw launcher (web UI on port 18800, gateway on port 18790)..."
 exec /usr/local/bin/picoclaw-launcher -public -no-browser 2>&1
