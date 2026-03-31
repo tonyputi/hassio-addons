@@ -1,0 +1,9 @@
+#!/command/with-contenv bashio
+# shellcheck shell=bash
+set -e
+
+export HOME="/share/picoclaw"
+export PICOCLAW_HOME="${HOME}/.picoclaw"
+
+bashio::log.info "Starting PicoClaw web launcher (port 18800)..."
+exec /usr/local/bin/picoclaw-launcher -public -no-browser 2>&1
