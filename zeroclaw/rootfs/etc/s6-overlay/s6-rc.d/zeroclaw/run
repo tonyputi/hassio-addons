@@ -14,6 +14,20 @@ mkdir -p "${ZEROCLAW_DATA}" "${HOME}/workspace"
 mkdir -p /usr/local/var
 ln -sfn "${ZEROCLAW_DATA}" /usr/local/var/zeroclaw
 
+# ── Inject provider API keys from .env file into container environment ────────
+# Create /share/zeroclaw/.zeroclaw/.env with KEY=value pairs to expose
+# additional provider keys (e.g. OPENAI_API_KEY, GROQ_API_KEY) to the daemon.
+ENV_FILE="${ZEROCLAW_DATA}/.env"
+if [ -f "${ENV_FILE}" ]; then
+    while IFS='=' read -r key value || [ -n "$key" ]; do
+        [ -z "$key" ] && continue
+        case "$key" in \#*) continue ;; esac
+        export "${key}=${value}"
+        printf '%s' "${value}" > "/var/run/s6/container_environment/${key}" 2>/dev/null || true
+    done < "${ENV_FILE}"
+    bashio::log.info "Provider env vars loaded from .env"
+fi
+
 # ── First-run guard ───────────────────────────────────────────────────────────
 if [ ! -f "${CONFIG_FILE}" ]; then
     bashio::log.fatal "No configuration found. Open the web terminal and run: zeroclaw onboard"
