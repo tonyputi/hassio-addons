@@ -37,17 +37,6 @@ RUN case "${BUILD_ARCH}" in \
       -o /usr/local/bin/ttyd && \
     chmod +x /usr/local/bin/ttyd
 
-# Download Lightpanda headless browser (enables ZeroClaw browser tool)
-RUN case "${BUILD_ARCH}" in \
-      aarch64) LP_ARCH="aarch64" ;; \
-      amd64)   LP_ARCH="x86_64" ;; \
-      *) echo "Unsupported arch: ${BUILD_ARCH}" && exit 1 ;; \
-    esac && \
-    curl -fsSL \
-      "https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-${LP_ARCH}-linux" \
-      -o /usr/local/bin/lightpanda && \
-    chmod +x /usr/local/bin/lightpanda
-
 # Cache-bust: increment when rootfs scripts change to force layer rebuild
 ARG ROOTFS_VERSION=4
 # Copy S6-overlay services and scripts
@@ -58,5 +47,4 @@ RUN chmod +x \
     /etc/s6-overlay/s6-rc.d/zeroclaw/run \
     /etc/s6-overlay/s6-rc.d/zeroclaw/finish \
     /etc/s6-overlay/s6-rc.d/ttyd/run \
-    /etc/s6-overlay/s6-rc.d/ttyd/finish \
-    /etc/s6-overlay/s6-rc.d/lightpanda/finish
+    /etc/s6-overlay/s6-rc.d/ttyd/finish
