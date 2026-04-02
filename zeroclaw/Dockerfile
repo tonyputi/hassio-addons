@@ -2,7 +2,7 @@ ARG BUILD_FROM
 FROM ${BUILD_FROM}
 
 ARG BUILD_ARCH
-ARG ZEROCLAW_VERSION="0.6.5"
+ARG ZEROCLAW_VERSION="0.6.8"
 
 # Install base dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
