@@ -5,8 +5,14 @@ set -e
 # ── Paths ────────────────────────────────────────────────────────────────────
 export HOME="/share/zeroclaw"
 export SHELL="/bin/bash"
-CONFIG_FILE="${HOME}/.zeroclaw/config.toml"
-mkdir -p "${HOME}/.zeroclaw" "${HOME}/workspace"
+ZEROCLAW_DATA="/share/zeroclaw/.zeroclaw"
+CONFIG_FILE="${ZEROCLAW_DATA}/config.toml"
+mkdir -p "${ZEROCLAW_DATA}" "${HOME}/workspace"
+
+# Redirect ZeroClaw's default internal data dir to the persistent share volume.
+# v0.6.8+ uses /usr/local/var/zeroclaw/ instead of ~/.zeroclaw/ — symlink it.
+mkdir -p /usr/local/var
+ln -sfn "${ZEROCLAW_DATA}" /usr/local/var/zeroclaw
 
 # ── Read options ──────────────────────────────────────────────────────────────
 API_KEY=$(bashio::config 'api_key')
