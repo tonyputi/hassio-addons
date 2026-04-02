@@ -1,5 +1,5 @@
 name: "ZeroClaw"
-version: "0.6.8.1"
+version: "0.6.8.2"
 slug: "zeroclaw"
 description: "Lightweight AI daemon with persistent memory, tools, cron scheduling, and messaging integrations"
 url: "https://www.zeroclawlabs.ai"
@@ -28,6 +28,8 @@ ports:
   "42617/tcp": 42617
 ports_description:
   "42617/tcp": "ZeroClaw Web Dashboard"
+ingress: true
+ingress_port: 7681
 panel_icon: mdi:robot
 
 hassio_api: true
