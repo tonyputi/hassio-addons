@@ -3,9 +3,13 @@
 ## 0.6.8
 
 - Update ZeroClaw binary to v0.6.8
-- Simplify HA configuration to 4 options: `api_key`, `timezone`, `ha_mcp_enabled`, `gateway_pairing`
-- Remove `provider`, `model`, `telegram_token`, `telegram_allowed_users` from HA options — managed via the web dashboard
-- First-run onboard now bootstraps with API key only; complete setup via web dashboard at port 42617
+- Simplify HA configuration to 3 options: `timezone`, `ha_mcp_enabled`, `gateway_pairing`
+- Remove all provider/model/key/channel options from HA — run `zeroclaw onboard` from the web terminal on first install
+- Fix ttyd HOME path (`/data/zeroclaw` → `/share/zeroclaw`) and add `cd $HOME` for correct terminal directory
+- Add symlink `/usr/local/var/zeroclaw` → `/share/zeroclaw/.zeroclaw` for persistent data across restarts
+- Add `user/type` bundle file for correct s6 service registration
+- Add finish scripts for ttyd and lightpanda services
+- Add ingress on port 7681 for web terminal access from HA sidebar
 
 ## 0.6.7
 

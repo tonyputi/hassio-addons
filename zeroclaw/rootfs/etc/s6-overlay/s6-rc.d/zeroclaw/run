@@ -14,31 +14,14 @@ mkdir -p "${ZEROCLAW_DATA}" "${HOME}/workspace"
 mkdir -p /usr/local/var
 ln -sfn "${ZEROCLAW_DATA}" /usr/local/var/zeroclaw
 
-# ── Read options ──────────────────────────────────────────────────────────────
-API_KEY=$(bashio::config 'api_key')
-TIMEZONE=$(bashio::config 'timezone')
-
-# ── Validate required options ─────────────────────────────────────────────────
-if bashio::var.is_empty "${API_KEY}"; then
-    bashio::log.fatal "API key is required. Set it in the add-on configuration."
+# ── First-run guard ───────────────────────────────────────────────────────────
+if [ ! -f "${CONFIG_FILE}" ]; then
+    bashio::log.fatal "No configuration found. Open the web terminal and run: zeroclaw onboard"
     exit 1
 fi
 
-# ── First-run: bootstrap config via zeroclaw onboard ─────────────────────────
-if [ ! -f "${CONFIG_FILE}" ]; then
-    bashio::log.info "First start detected — running initial setup..."
-    /usr/local/bin/zeroclaw onboard \
-        --api-key "${API_KEY}" \
-        --memory markdown \
-        --force
-    bashio::log.info "Setup complete. Configure provider, model and channels via the web dashboard."
-fi
-
-# ── Export API key for daemon and terminal sessions ───────────────────────────
-export ZEROCLAW_API_KEY="${API_KEY}"
-cat > /etc/profile.d/zeroclaw-api.sh <<EOF
-export ZEROCLAW_API_KEY="${API_KEY}"
-EOF
+# ── Read options ──────────────────────────────────────────────────────────────
+TIMEZONE=$(bashio::config 'timezone')
 
 # ── Timezone ──────────────────────────────────────────────────────────────────
 if [ -f "/usr/share/zoneinfo/${TIMEZONE}" ]; then

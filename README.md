@@ -62,9 +62,9 @@
   <img src="https://img.shields.io/badge/amd64-supported-brightgreen" />
 </p>
 
-A full-featured AI daemon with persistent memory, workspace files, cron scheduling, web dashboard, and web terminal. Set only `api_key` and `timezone` in HA — configure provider, model, Telegram, and everything else from the web dashboard.
+A full-featured AI daemon with persistent memory, workspace files, cron scheduling, web dashboard, and web terminal. Only `timezone` in HA — everything else configured via `zeroclaw onboard` from the built-in terminal.
 
-**Quick start:** Set `api_key` and `timezone` in the add-on options, then start. The web dashboard is at `http://<ha-ip>:42617`.
+**Quick start:** Install, open the web terminal, run `zeroclaw onboard`, then restart the add-on. The web dashboard is at `http://<ha-ip>:42617`.
 
 → [ZeroClaw documentation](zeroclaw/DOCS.md) · [Changelog](zeroclaw/CHANGELOG.md) · [zeroclawlabs.ai](https://www.zeroclawlabs.ai)
 

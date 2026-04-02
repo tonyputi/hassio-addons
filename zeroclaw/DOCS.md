@@ -8,12 +8,21 @@ This add-on installs ZeroClaw using pre-built binaries — no Rust compilation r
 
 | Option            | Required | Default | Description |
 | ----------------- | :------: | ------- | ----------- |
-| `api_key`         | Yes      | —       | API key for your AI provider — used on first start to bootstrap the config |
 | `timezone`        | Yes      | `UTC`   | IANA timezone for cron scheduling (e.g. `Europe/Rome`, `America/New_York`) |
 | `ha_mcp_enabled`  | No       | `false` | Allow the AI agent to read and control Home Assistant entities (lights, sensors, automations) via MCP |
 | `gateway_pairing` | No       | `true`  | Require a one-time pairing code on first access to the web dashboard. Disable only on a trusted local network |
 
-Provider, model, Telegram, and all other settings are configured via the **web dashboard** at `http://<your-ha-ip>:42617` after first start.
+## First start
+
+On first install, no configuration exists yet. Open the **web terminal** from the add-on UI and run:
+
+```bash
+zeroclaw onboard
+```
+
+The interactive wizard will guide you through provider, model, API key, and channel setup. Once complete, restart the add-on — the daemon will start normally.
+
+Provider, model, API key, Telegram, and all other settings are managed via `zeroclaw onboard` or the **web dashboard** at `http://<your-ha-ip>:42617`.
 
 ## Web dashboard
 
