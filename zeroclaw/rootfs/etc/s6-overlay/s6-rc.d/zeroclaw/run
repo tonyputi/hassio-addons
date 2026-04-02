@@ -9,9 +9,7 @@ CONFIG_FILE="${HOME}/.zeroclaw/config.toml"
 mkdir -p "${HOME}/.zeroclaw" "${HOME}/workspace"
 
 # ── Read options ──────────────────────────────────────────────────────────────
-PROVIDER=$(bashio::config 'provider')
 API_KEY=$(bashio::config 'api_key')
-MODEL=$(bashio::config 'model')
 TIMEZONE=$(bashio::config 'timezone')
 
 # ── Validate required options ─────────────────────────────────────────────────
@@ -23,44 +21,17 @@ fi
 # ── First-run: bootstrap config via zeroclaw onboard ─────────────────────────
 if [ ! -f "${CONFIG_FILE}" ]; then
     bashio::log.info "First start detected — running initial setup..."
-    # 'other' is a UI placeholder; omit --provider so onboard uses the key alone
-    if [ "${PROVIDER}" != "other" ]; then
-        /usr/local/bin/zeroclaw onboard \
-            --provider "${PROVIDER}" \
-            --api-key "${API_KEY}" \
-            --model "${MODEL}" \
-            --memory markdown \
-            --force
-    else
-        /usr/local/bin/zeroclaw onboard \
-            --api-key "${API_KEY}" \
-            --memory markdown \
-            --force
-    fi
-    bashio::log.info "Setup complete."
+    /usr/local/bin/zeroclaw onboard \
+        --api-key "${API_KEY}" \
+        --memory markdown \
+        --force
+    bashio::log.info "Setup complete. Configure provider, model and channels via the web dashboard."
 fi
 
-# ── Export API key for daemon and write to profile for terminal sessions ──────
+# ── Export API key for daemon and terminal sessions ───────────────────────────
 export ZEROCLAW_API_KEY="${API_KEY}"
-
-# Map provider to its specific env var so 'zeroclaw agent' in the terminal works
-case "${PROVIDER}" in
-    gemini|google)    PROVIDER_KEY_VAR="GEMINI_API_KEY" ;;
-    openai)           PROVIDER_KEY_VAR="OPENAI_API_KEY" ;;
-    anthropic)        PROVIDER_KEY_VAR="ANTHROPIC_API_KEY" ;;
-    openrouter)       PROVIDER_KEY_VAR="OPENROUTER_API_KEY" ;;
-    mistral)          PROVIDER_KEY_VAR="MISTRAL_API_KEY" ;;
-    groq)             PROVIDER_KEY_VAR="GROQ_API_KEY" ;;
-    deepseek)         PROVIDER_KEY_VAR="DEEPSEEK_API_KEY" ;;
-    xai)              PROVIDER_KEY_VAR="XAI_API_KEY" ;;
-    *)                PROVIDER_KEY_VAR="ZEROCLAW_API_KEY" ;;
-esac
-export "${PROVIDER_KEY_VAR}=${API_KEY}"
-
-# Write to profile so bash login shells (ttyd terminal) inherit the key
 cat > /etc/profile.d/zeroclaw-api.sh <<EOF
 export ZEROCLAW_API_KEY="${API_KEY}"
-export ${PROVIDER_KEY_VAR}="${API_KEY}"
 EOF
 
 # ── Timezone ──────────────────────────────────────────────────────────────────
@@ -72,45 +43,20 @@ else
     bashio::log.warning "Unknown timezone '${TIMEZONE}', falling back to UTC."
 fi
 
-# ── Remove managed sections before re-injection ───────────────────────────────
-# Telegram and MCP server entries are always appended at the end of config.toml.
-# Truncate at the first managed section marker so they are rewritten on every
-# start, keeping HA UI options as the single source of truth.
-# NOTE: grep exits 1 when no match — use || true to avoid aborting with set -e.
-for marker in '^\[channels_config\.telegram\]' '^\[\[mcp\.servers\]\]'; do
-    line=$(grep -n "${marker}" "${CONFIG_FILE}" 2>/dev/null | head -1 | cut -d: -f1 || true)
-    if [ -n "${line}" ] && [ "${line}" -gt 1 ]; then
-        head -n $((line - 1)) "${CONFIG_FILE}" > "${CONFIG_FILE}.tmp"
-        mv "${CONFIG_FILE}.tmp" "${CONFIG_FILE}"
-    fi
-done
-
-# ── Telegram integration ───────────────────────────────────────────────────────
-TOKEN=$(bashio::config 'telegram_token')
-ALLOWED=$(bashio::config 'telegram_allowed_users')
-if [ -n "${TOKEN}" ]; then
-    # Build allowed_users array: "*" becomes ["*"], else split CSV into array
-    if [ "${ALLOWED}" = "*" ]; then
-        ALLOWED_TOML='["*"]'
-    else
-        ALLOWED_TOML="[$(echo "${ALLOWED}" | sed 's/,/","/g; s/^/"/; s/$/"/' )]"
-    fi
-
-    bashio::log.info "Writing Telegram channel configuration..."
-    cat >> "${CONFIG_FILE}" <<EOF
-
-[channels_config.telegram]
-bot_token = "${TOKEN}"
-allowed_users = ${ALLOWED_TOML}
-EOF
+# ── Remove managed MCP section before re-injection ───────────────────────────
+# [[mcp.servers]] is always appended — truncate at the marker so it is
+# rewritten on every start, keeping ha_mcp_enabled as source of truth.
+# NOTE: grep exits 1 on no match — use || true to avoid aborting with set -e.
+line=$(grep -n '^\[\[mcp\.servers\]\]' "${CONFIG_FILE}" 2>/dev/null | head -1 | cut -d: -f1 || true)
+if [ -n "${line}" ] && [ "${line}" -gt 1 ]; then
+    head -n $((line - 1)) "${CONFIG_FILE}" > "${CONFIG_FILE}.tmp"
+    mv "${CONFIG_FILE}.tmp" "${CONFIG_FILE}"
 fi
 
 # ── Home Assistant MCP integration ────────────────────────────────────────────
 HA_MCP_ENABLED=$(bashio::config 'ha_mcp_enabled')
 if bashio::var.true "${HA_MCP_ENABLED}"; then
-    # Ensure [mcp] section exists with enabled = true
     if grep -q '^\[mcp\]' "${CONFIG_FILE}" 2>/dev/null; then
-        # onboard sets enabled = false and servers = [] — fix both
         sed -i '/^\[mcp\]/,/^\[/{s/^enabled = false$/enabled = true/}' "${CONFIG_FILE}"
         sed -i '/^\[mcp\]/,/^\[/{s/^deferred_loading = true$/deferred_loading = false/}' "${CONFIG_FILE}"
         sed -i '/^servers = \[\]$/d' "${CONFIG_FILE}"
@@ -124,13 +70,11 @@ deferred_loading = false
 EOF
     fi
 
-    # Set autonomy level to full so HA MCP calls are never blocked
     if grep -q '^\[autonomy\]' "${CONFIG_FILE}" 2>/dev/null; then
         sed -i '/^\[autonomy\]/,/^\[/{s/^level = "supervised"$/level = "full"/}' "${CONFIG_FILE}"
         sed -i '/^\[autonomy\]/,/^\[/{s/^require_approval_for_medium_risk = true$/require_approval_for_medium_risk = false/}' "${CONFIG_FILE}"
     fi
 
-    # Use HA-provided supervisor token — no manual token required
     HA_TOKEN="${SUPERVISOR_TOKEN}"
     bashio::log.info "Writing Home Assistant MCP server configuration..."
     cat >> "${CONFIG_FILE}" <<EOF
@@ -146,7 +90,6 @@ EOF
 fi
 
 # ── Gateway: bind to 0.0.0.0 for direct port access ──────────────────────────
-# onboard defaults to host = "127.0.0.1" and allow_public_bind = false.
 GATEWAY_PAIRING=$(bashio::config 'gateway_pairing')
 PAIRING_VAL="true"
 if bashio::var.false "${GATEWAY_PAIRING}"; then PAIRING_VAL="false"; fi
@@ -169,5 +112,5 @@ fi
 bashio::log.info "Gateway configured (port=42617, pairing=${PAIRING_VAL})."
 
 # ── Start daemon ──────────────────────────────────────────────────────────────
-bashio::log.info "Starting ZeroClaw daemon (provider=${PROVIDER}, model=${MODEL})..."
+bashio::log.info "Starting ZeroClaw daemon..."
 exec /usr/local/bin/zeroclaw daemon
