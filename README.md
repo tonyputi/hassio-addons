@@ -28,7 +28,7 @@
 | **RAM** | ~100MB | < 10MB |
 | **Web UI** | Port 42617 (built-in dashboard) | Port 18800 (launcher) |
 | **Web terminal** | ✓ (ttyd, ingress) | ✓ (ttyd, ingress) |
-| **Telegram** | ✓ (via HA options) | ✓ (via web UI) |
+| **Telegram** | ✓ (via web UI) | ✓ (via web UI) |
 | **Home Assistant MCP** | ✓ | ✓ |
 | **Web search** | DuckDuckGo | DuckDuckGo + Tavily (optional) |
 | **Channels** | Telegram | Telegram, Discord, Matrix, Slack, IRC, and more |
@@ -55,16 +55,16 @@
 ## ZeroClaw
 
 <p>
-  <img src="https://img.shields.io/badge/ZeroClaw-v0.6.7-blue" />
+  <img src="https://img.shields.io/badge/ZeroClaw-v0.6.8-blue" />
   &nbsp;
   <img src="https://img.shields.io/badge/Raspberry%20Pi-supported-brightgreen" />
   &nbsp;
   <img src="https://img.shields.io/badge/amd64-supported-brightgreen" />
 </p>
 
-A full-featured AI daemon with persistent memory, workspace files, cron scheduling, web dashboard, and web terminal. Configure everything from the HA UI — provider, model, Telegram, and Home Assistant MCP.
+A full-featured AI daemon with persistent memory, workspace files, cron scheduling, web dashboard, and web terminal. Set only `api_key` and `timezone` in HA — configure provider, model, Telegram, and everything else from the web dashboard.
 
-**Quick start:** Set `provider`, `api_key`, `model`, and `timezone` in the add-on options, then start. The web dashboard is at `http://<ha-ip>:42617`.
+**Quick start:** Set `api_key` and `timezone` in the add-on options, then start. The web dashboard is at `http://<ha-ip>:42617`.
 
 → [ZeroClaw documentation](zeroclaw/DOCS.md) · [Changelog](zeroclaw/CHANGELOG.md) · [zeroclawlabs.ai](https://www.zeroclawlabs.ai)
 

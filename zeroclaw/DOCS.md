@@ -6,20 +6,14 @@ This add-on installs ZeroClaw using pre-built binaries — no Rust compilation r
 
 ## Configuration
 
-| Option                   | Required | Default                          | Description |
-| ------------------------ | :------: | -------------------------------- | ----------- |
-| `provider`               | Yes      | `gemini`                         | AI provider: `gemini`, `openai`, `anthropic`, `mistral`, `groq`, `deepseek`, `xai`, `openrouter`, `ollama`, `other` |
-| `api_key`                | Yes      | —                                | API key for your chosen provider |
-| `model`                  | Yes      | `gemini-2.0-flash`               | Model name (e.g. `gemini-2.0-flash`, `gpt-4o`, `claude-opus-4-6`) |
-| `timezone`               | Yes      | `UTC`                            | IANA timezone for cron scheduling (e.g. `Europe/Rome`, `America/New_York`) |
-| `telegram_token`         | No       | —                                | Telegram bot token — create one via [@BotFather](https://t.me/BotFather) |
-| `telegram_allowed_users` | No       | `*`                              | Comma-separated Telegram user IDs or usernames allowed to chat. Use `*` to allow everyone (not recommended) |
-| `ha_mcp_enabled`         | No       | `false`                          | Allow the AI agent to read and control Home Assistant entities (lights, sensors, automations) via MCP |
-| `gateway_pairing`        | No       | `true`                           | Require a one-time pairing code on first access to the web dashboard. Disable only on a trusted local network |
+| Option            | Required | Default | Description |
+| ----------------- | :------: | ------- | ----------- |
+| `api_key`         | Yes      | —       | API key for your AI provider — used on first start to bootstrap the config |
+| `timezone`        | Yes      | `UTC`   | IANA timezone for cron scheduling (e.g. `Europe/Rome`, `America/New_York`) |
+| `ha_mcp_enabled`  | No       | `false` | Allow the AI agent to read and control Home Assistant entities (lights, sensors, automations) via MCP |
+| `gateway_pairing` | No       | `true`  | Require a one-time pairing code on first access to the web dashboard. Disable only on a trusted local network |
 
-### Provider `other`
-
-Select `other` if your provider is not in the list. ZeroClaw will start without configuring a provider — use the **Web terminal** to manually edit `~/.zeroclaw/config.toml`.
+Provider, model, Telegram, and all other settings are configured via the **web dashboard** at `http://<your-ha-ip>:42617` after first start.
 
 ## Web dashboard
 
@@ -41,7 +35,7 @@ When `ha_mcp_enabled: true`, ZeroClaw gains full access to your Home Assistant i
 
 The add-on uses the Supervisor token automatically — no manual token setup is required.
 
-> **Security note:** With MCP enabled, ZeroClaw's autonomy level is set to `full` so HA tool calls are never blocked. Restrict Telegram access with `telegram_allowed_users` to prevent unauthorized control of your home.
+> **Security note:** With MCP enabled, ZeroClaw's autonomy level is set to `full` so HA tool calls are never blocked. Restrict Telegram access via the web dashboard to prevent unauthorized control of your home.
 
 ## Web terminal
 
@@ -55,7 +49,7 @@ The add-on includes a browser-based terminal (ttyd) accessible from the **ZeroCl
 
 All ZeroClaw data is stored in `/share/zeroclaw/`:
 
-- `.zeroclaw/config.toml` — generated on first start from add-on options
+- `.zeroclaw/config.toml` — generated on first start, then managed via the web dashboard
 - `.zeroclaw/workspace/` — workspace files (SOUL.md, IDENTITY.md, MEMORY.md, TOOLS.md, etc.)
 
 You can edit workspace files using the Home Assistant **File Editor** add-on or via SSH.
