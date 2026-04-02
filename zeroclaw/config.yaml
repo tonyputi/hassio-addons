@@ -1,5 +1,5 @@
 name: "ZeroClaw"
-version: "0.6.8.3"
+version: "0.6.8.4"
 slug: "zeroclaw"
 description: "Lightweight AI daemon with persistent memory, tools, cron scheduling, and messaging integrations"
 url: "https://www.zeroclawlabs.ai"

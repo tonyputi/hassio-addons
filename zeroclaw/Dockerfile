@@ -58,4 +58,5 @@ RUN chmod +x \
     /etc/s6-overlay/s6-rc.d/zeroclaw/run \
     /etc/s6-overlay/s6-rc.d/zeroclaw/finish \
     /etc/s6-overlay/s6-rc.d/ttyd/run \
-    /etc/s6-overlay/s6-rc.d/ttyd/finish
+    /etc/s6-overlay/s6-rc.d/ttyd/finish \
+    /etc/s6-overlay/s6-rc.d/lightpanda/finish
