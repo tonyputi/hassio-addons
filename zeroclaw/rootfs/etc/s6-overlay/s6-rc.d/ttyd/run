@@ -2,8 +2,9 @@
 # shellcheck shell=bash
 set -e
 
-export HOME="/data/zeroclaw"
+export HOME="/share/zeroclaw"
 
+cd "${HOME}" || true
 bashio::log.info "Starting ttyd web terminal on port 7681..."
 exec ttyd \
     --port 7681 \
