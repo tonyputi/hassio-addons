@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.6.8.8
+
+- Add Node.js and `agent-browser` npm package for browser automation support
+- Enables ZeroClaw browser tool (`backend = "agent_browser"`) for navigating websites without APIs
+
 ## 0.6.8
 
 - Update ZeroClaw binary to v0.6.8

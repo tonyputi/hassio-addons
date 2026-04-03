@@ -13,7 +13,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         tzdata \
         jq \
         git \
+        nodejs \
+        npm \
     && rm -rf /var/lib/apt/lists/*
+
+# Install agent-browser for ZeroClaw browser automation
+RUN npm install -g agent-browser --omit=dev && npm cache clean --force
 
 # Download and extract ZeroClaw pre-built binary (glibc, compatible with Debian base)
 RUN case "${BUILD_ARCH}" in \
@@ -38,7 +43,7 @@ RUN case "${BUILD_ARCH}" in \
     chmod +x /usr/local/bin/ttyd
 
 # Cache-bust: increment when rootfs scripts change to force layer rebuild
-ARG ROOTFS_VERSION=4
+ARG ROOTFS_VERSION=5
 # Copy S6-overlay services and scripts
 COPY rootfs /
 
