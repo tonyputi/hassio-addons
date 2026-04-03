@@ -1,28 +1,10 @@
 configuration:
-  provider:
-    name: "AI Provider"
-    description: "The AI provider to use. Choose 'other' for providers not listed (configure via terminal)."
-  api_key:
-    name: "API Key"
-    description: "Your API key for the selected provider. For Gemini: console.cloud.google.com. For OpenAI: platform.openai.com."
-  model:
-    name: "Model"
-    description: "The model to use. Examples: gemini-2.0-flash, gpt-4o, claude-3-5-sonnet-20241022, mistral-large-latest."
   timezone:
     name: "Timezone"
     description: "Timezone for cron scheduling. Use IANA format, e.g. Europe/Rome, America/New_York, Asia/Tokyo."
-  telegram_token:
-    name: "Telegram Bot Token"
-    description: "Optional. Create a bot via @BotFather on Telegram and paste the token here."
-  telegram_allowed_users:
-    name: "Telegram Allowed Users"
-    description: "Comma-separated Telegram user IDs or usernames allowed to interact. Use * to allow everyone (not recommended)."
   ha_mcp_enabled:
     name: "Enable Home Assistant MCP"
     description: "Allow the AI agent to read and control Home Assistant entities (lights, sensors, automations) via MCP."
-  ha_mcp_token:
-    name: "Home Assistant Long-Lived Token"
-    description: "Generate one in HA under Settings → Security → Long-Lived Access Tokens. Required when MCP is enabled."
   gateway_pairing:
     name: "Require Dashboard Pairing"
     description: "When enabled, the web dashboard requires a one-time pairing code on first access. Disable to allow direct access without pairing (only safe on a trusted local network)."

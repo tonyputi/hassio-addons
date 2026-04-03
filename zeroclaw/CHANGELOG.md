@@ -18,7 +18,7 @@
 - Fix ttyd HOME path (`/data/zeroclaw` → `/share/zeroclaw`) and add `cd $HOME` for correct terminal directory
 - Add symlink `/usr/local/var/zeroclaw` → `/share/zeroclaw/.zeroclaw` for persistent data across restarts
 - Add `user/type` bundle file for correct s6 service registration
-- Add finish scripts for ttyd and lightpanda services
+- Add finish scripts for ttyd service
 - Add ingress on port 7681 for web terminal access from HA sidebar
 
 ## 0.6.7
@@ -29,7 +29,6 @@
 - Add `timezone` option for cron scheduling
 - Add web dashboard on port 42617 (replaces ingress, which is incompatible with the SPA architecture)
 - Add ttyd web terminal accessible from the add-on UI
-- Add Lightpanda headless browser for ZeroClaw browser tool
 - Fix `$SHELL not set` warning in ZeroClaw doctor
 - Fix MCP tools blocked when autonomy level was `supervised` — now set to `full` when MCP is enabled
 - Data directory changed from `/data/zeroclaw/` to `/share/zeroclaw/` for cross-add-on accessibility
