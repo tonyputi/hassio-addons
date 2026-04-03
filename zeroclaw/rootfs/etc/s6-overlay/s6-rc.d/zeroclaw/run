@@ -5,6 +5,10 @@ set -e
 # ── Paths ────────────────────────────────────────────────────────────────────
 export HOME="/share/zeroclaw"
 export SHELL="/bin/bash"
+
+# ── Browser: point agent-browser/Puppeteer to system Chromium ────────────────
+export PUPPETEER_EXECUTABLE_PATH="/usr/bin/chromium"
+export PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH="/usr/bin/chromium"
 ZEROCLAW_DATA="/share/zeroclaw/.zeroclaw"
 CONFIG_FILE="${ZEROCLAW_DATA}/config.toml"
 mkdir -p "${ZEROCLAW_DATA}" "${HOME}/workspace"

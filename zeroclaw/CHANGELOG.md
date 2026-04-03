@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.6.8.9
+
+- Install system Chromium and point agent-browser/Puppeteer to it via env vars
+- Fixes "Chrome not found" error when using ZeroClaw browser tool
+
 ## 0.6.8.8
 
 - Add Node.js and `agent-browser` npm package for browser automation support
