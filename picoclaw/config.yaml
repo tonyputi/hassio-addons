@@ -28,7 +28,7 @@ ports_description:
   "18800/tcp": "PicoClaw Web UI"
 ingress: true
 ingress_port: 7681
-panel_icon: mdi:robot-outline
+panel_icon: mdi:robot
 
 hassio_api: true
 homeassistant_api: true
