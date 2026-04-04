@@ -38,9 +38,12 @@ fi
 HA_MCP_ENABLED=$(bashio::config 'ha_mcp_enabled')
 if bashio::var.true "${HA_MCP_ENABLED}"; then
     bashio::log.info "Configuring Home Assistant MCP integration..."
-    openclaw mcporter config add HA "http://localhost:8123/api/mcp" \
-        --header "Authorization=Bearer ${SUPERVISOR_TOKEN}" \
-        --scope home || bashio::log.warning "MCP configuration failed, continuing..."
+    jq --arg token "${SUPERVISOR_TOKEN}" \
+        '.mcpServers["home-assistant"] = {
+            "url": "http://supervisor/core/api/mcp",
+            "headers": { "Authorization": ("Bearer " + $token) }
+        }' \
+        "${CONFIG_FILE}" > /tmp/oc_tmp.json && mv /tmp/oc_tmp.json "${CONFIG_FILE}"
 fi
 
 # Gateway pairing
