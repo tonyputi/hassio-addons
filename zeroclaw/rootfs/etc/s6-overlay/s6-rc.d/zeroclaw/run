@@ -6,9 +6,6 @@ set -e
 export HOME="/share/zeroclaw"
 export SHELL="/bin/bash"
 
-# ── Browser: point agent-browser/Puppeteer to system Chromium ────────────────
-export PUPPETEER_EXECUTABLE_PATH="/usr/bin/chromium"
-export PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH="/usr/bin/chromium"
 ZEROCLAW_DATA="/share/zeroclaw/.zeroclaw"
 CONFIG_FILE="${ZEROCLAW_DATA}/config.toml"
 mkdir -p "${ZEROCLAW_DATA}" "${HOME}/workspace"
@@ -117,6 +114,16 @@ require_pairing = ${PAIRING_VAL}
 EOF
 fi
 bashio::log.info "Gateway configured (port=42617, pairing=${PAIRING_VAL})."
+
+# ── Browser addon auto-detect (browserless_chrome on port 3000) ───────────────
+BROWSER_CDP_URL="ws://localhost:3000"
+if curl -sf "http://localhost:3000/json/version" > /dev/null 2>&1; then
+    bashio::log.info "Browser addon detected — configuring agent-browser CDP at ${BROWSER_CDP_URL}"
+    mkdir -p "${HOME}/.agent-browser"
+    printf '{"cdp":"%s"}\n' "${BROWSER_CDP_URL}" > "${HOME}/.agent-browser/config.json"
+else
+    bashio::log.info "No browser addon detected — browser tools unavailable. Install browserless_chrome addon to enable."
+fi
 
 # ── Start daemon ──────────────────────────────────────────────────────────────
 bashio::log.info "Starting ZeroClaw daemon..."
