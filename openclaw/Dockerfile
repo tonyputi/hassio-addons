@@ -30,7 +30,7 @@ RUN ARCH=$(uname -m | sed 's/x86_64/x86_64/;s/aarch64/aarch64/') && \
 
 ARG ROOTFS_VERSION=1
 COPY rootfs /
-RUN chmod a+x \
+RUN chmod +x \
     /etc/s6-overlay/s6-rc.d/openclaw/run \
     /etc/s6-overlay/s6-rc.d/openclaw/finish \
     /etc/s6-overlay/s6-rc.d/ttyd/run \

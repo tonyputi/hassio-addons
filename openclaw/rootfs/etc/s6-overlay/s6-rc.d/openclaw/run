@@ -4,7 +4,6 @@ set -e
 
 export HOME="/share/openclaw"
 export SHELL="/bin/bash"
-export XDG_CONFIG_HOME="${HOME}"
 
 OPENCLAW_DATA="${HOME}/.openclaw"
 CONFIG_FILE="${OPENCLAW_DATA}/openclaw.json"
