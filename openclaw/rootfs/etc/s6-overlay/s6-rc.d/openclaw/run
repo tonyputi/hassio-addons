@@ -1,0 +1,55 @@
+#!/command/with-contenv bashio
+# shellcheck shell=bash
+set -e
+
+export HOME="/share/openclaw"
+export SHELL="/bin/bash"
+export XDG_CONFIG_HOME="${HOME}"
+
+OPENCLAW_DATA="${HOME}/.openclaw"
+CONFIG_FILE="${OPENCLAW_DATA}/openclaw.json"
+
+mkdir -p "${OPENCLAW_DATA}" "${HOME}/workspace"
+
+# Timezone
+TIMEZONE=$(bashio::config 'timezone')
+if [ -f "/usr/share/zoneinfo/${TIMEZONE}" ]; then
+    ln -sf "/usr/share/zoneinfo/${TIMEZONE}" /etc/localtime
+    export TZ="${TIMEZONE}"
+fi
+
+# First-run bootstrap: create minimal config if missing
+if [ ! -f "${CONFIG_FILE}" ]; then
+    bashio::log.warning "OpenClaw not configured. Run 'openclaw configure' from the web terminal."
+    cat > "${CONFIG_FILE}" << 'EOF'
+{
+  "gateway": {
+    "port": 38789,
+    "bind": "lan",
+    "auth": {
+      "mode": "token"
+    }
+  }
+}
+EOF
+fi
+
+# Home Assistant MCP integration
+HA_MCP_ENABLED=$(bashio::config 'ha_mcp_enabled')
+if bashio::var.true "${HA_MCP_ENABLED}"; then
+    bashio::log.info "Configuring Home Assistant MCP integration..."
+    openclaw mcporter config add HA "http://localhost:8123/api/mcp" \
+        --header "Authorization=Bearer ${SUPERVISOR_TOKEN}" \
+        --scope home || bashio::log.warning "MCP configuration failed, continuing..."
+fi
+
+# Gateway pairing
+GATEWAY_PAIRING=$(bashio::config 'gateway_pairing')
+if bashio::var.false "${GATEWAY_PAIRING}"; then
+    bashio::log.info "Disabling gateway pairing requirement..."
+    jq '.gateway.controlUi.dangerouslyDisableDeviceAuth = true' \
+        "${CONFIG_FILE}" > /tmp/oc_tmp.json && mv /tmp/oc_tmp.json "${CONFIG_FILE}"
+fi
+
+bashio::log.info "Starting OpenClaw gateway on port 38789..."
+exec openclaw gateway

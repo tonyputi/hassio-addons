@@ -1,0 +1,34 @@
+name: "OpenClaw"
+version: "0.1.0"
+slug: "openclaw"
+description: "OpenClaw AI assistant as a Home Assistant add-on"
+url: "https://openclaw.ai"
+arch:
+  - aarch64
+  - amd64
+startup: services
+boot: auto
+init: false
+
+options:
+  timezone: UTC
+  ha_mcp_enabled: false
+  gateway_pairing: true
+
+schema:
+  timezone: str
+  ha_mcp_enabled: bool
+  gateway_pairing: bool
+
+map:
+  - share:rw
+ports:
+  "38789/tcp": 38789
+ports_description:
+  "38789/tcp": "OpenClaw Gateway"
+ingress: true
+ingress_port: 7681
+panel_icon: mdi:robot
+
+hassio_api: true
+homeassistant_api: true
