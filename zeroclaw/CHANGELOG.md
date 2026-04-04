@@ -1,10 +1,5 @@
 # Changelog
 
-## 0.6.8.10
-
-- Switch ingress from ttyd (port 7681) to web dashboard (port 42617)
-- Web dashboard now accessible from HA sidebar panel
-
 ## 0.6.8.9
 
 - Install system Chromium and point agent-browser/Puppeteer to it via env vars
