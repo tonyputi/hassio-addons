@@ -49,18 +49,6 @@ if bashio::var.true "${HA_MCP_ENABLED}"; then
     fi
 fi
 
-# ── Tavily search ─────────────────────────────────────────────────────────────
-TAVILY_KEY=$(bashio::config 'tavily_api_key' || true)
-if [ -n "${TAVILY_KEY}" ]; then
-    if [ -f "${CONFIG_FILE}" ]; then
-        jq --arg key "${TAVILY_KEY}" \
-           '.tools.web.tavily = {enabled: true, api_key: $key, max_results: 10}' \
-           "${CONFIG_FILE}" > "${CONFIG_FILE}.tmp" \
-           && mv "${CONFIG_FILE}.tmp" "${CONFIG_FILE}"
-    fi
-    bashio::log.info "Tavily search configured."
-fi
-
 # ── Start launcher ────────────────────────────────────────────────────────────
 bashio::log.info "Starting PicoClaw launcher (web UI: port 18800)..."
 exec /usr/local/bin/picoclaw-launcher -public -no-browser 2>&1
