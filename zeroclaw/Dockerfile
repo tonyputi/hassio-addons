@@ -3,6 +3,7 @@ FROM ${BUILD_FROM}
 
 ARG BUILD_ARCH
 ARG ZEROCLAW_VERSION="0.6.8"
+ARG AGENT_BROWSER_VERSION="0.24.1"
 
 # Install base dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -18,7 +19,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Install agent-browser (browser automation CLI — connects to browserless_chrome addon via CDP)
-RUN npm install -g agent-browser --omit=dev && npm cache clean --force
+RUN npm install -g agent-browser@${AGENT_BROWSER_VERSION} --omit=dev && npm cache clean --force
 
 # Download and extract ZeroClaw pre-built binary (glibc, compatible with Debian base)
 RUN case "${BUILD_ARCH}" in \
