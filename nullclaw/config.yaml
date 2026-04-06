@@ -1,5 +1,5 @@
 name: "NullClaw"
-version: "0.1.0"
+version: "0.1.0.1"
 slug: "nullclaw"
 description: "Fastest, smallest fully autonomous AI assistant — 678 KB Zig binary, ~1 MB RAM"
 url: "https://github.com/nullclaw/nullclaw"
