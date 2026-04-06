@@ -64,7 +64,7 @@ for i in 1 2 3 4 5 6; do
         BROWSER_DETECTED=true
         break
     fi
-    [ "${i}" -lt 6 ] && bashio::log.info "Waiting for browser addon... (${i}/6)" && sleep 5
+    if [ "${i}" -lt 6 ]; then bashio::log.info "Waiting for browser addon... (${i}/6)"; sleep 5; fi
 done
 if [ "${BROWSER_DETECTED}" = "true" ]; then
     bashio::log.info "Browser addon detected — configuring CDP at ${BROWSER_CDP_URL}"
