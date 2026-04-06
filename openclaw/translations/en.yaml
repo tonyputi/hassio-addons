@@ -8,3 +8,6 @@ configuration:
   gateway_pairing:
     name: "Require Gateway Pairing"
     description: "When enabled, the web gateway requires a one-time pairing on first access. Disable only on trusted local networks."
+  browser_cdp_port:
+    name: "Browser CDP Port"
+    description: "Port of the Browserless Chromium add-on (alexbelgium). Default is 3000. Change only if you configured a custom port in that add-on."

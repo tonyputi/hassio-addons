@@ -5,3 +5,6 @@ configuration:
   ha_mcp_enabled:
     name: Enable Home Assistant MCP
     description: Allow the AI agent to read and control Home Assistant entities (lights, sensors, automations) via MCP.
+  browser_cdp_port:
+    name: "Browser CDP Port"
+    description: "Port of the Browserless Chromium add-on (alexbelgium). Default is 3000. Change only if you configured a custom port in that add-on."

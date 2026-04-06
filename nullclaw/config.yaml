@@ -14,11 +14,13 @@ options:
   timezone: UTC
   ha_mcp_enabled: false
   gateway_pairing: true
+  browser_cdp_port: 3000
 
 schema:
   timezone: str
   ha_mcp_enabled: bool
   gateway_pairing: bool
+  browser_cdp_port: int
 
 map:
   - share:rw

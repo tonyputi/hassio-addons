@@ -115,9 +115,10 @@ EOF
 fi
 bashio::log.info "Gateway configured (port=42617, pairing=${PAIRING_VAL})."
 
-# ── Browser addon auto-detect (browserless_chrome on port 3000) ───────────────
-BROWSER_CDP_URL="ws://localhost:3000"
-if curl -sf "http://localhost:3000/json/version" > /dev/null 2>&1; then
+# ── Browser addon auto-detect ─────────────────────────────────────────────────
+BROWSER_CDP_PORT=$(bashio::config 'browser_cdp_port')
+BROWSER_CDP_URL="ws://localhost:${BROWSER_CDP_PORT}"
+if curl -sf "http://localhost:${BROWSER_CDP_PORT}/json/version" > /dev/null 2>&1; then
     bashio::log.info "Browser addon detected — configuring agent-browser CDP at ${BROWSER_CDP_URL}"
     mkdir -p "${HOME}/.agent-browser"
     printf '{"cdp":"%s"}\n' "${BROWSER_CDP_URL}" > "${HOME}/.agent-browser/config.json"
