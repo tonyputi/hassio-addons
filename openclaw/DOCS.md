@@ -34,6 +34,14 @@ No manual token configuration is required — the Supervisor token is used autom
 
 When `gateway_pairing` is enabled (default), the gateway requires a one-time pairing code on first access from a new device. Disable only on trusted local networks.
 
+## Browser automation
+
+Browser automation is **not available by default**. To enable it, install the **Browserless Chromium** add-on from the [alexbelgium repository](https://github.com/alexbelgium/hassio-addons).
+
+Once installed and running, OpenClaw automatically detects it at boot and sets the CDP endpoint in its configuration. No manual configuration is needed — just restart OpenClaw after installing the browser add-on.
+
+Without the browser add-on, all other tools (web search, memory, MCP, scheduling) continue to work normally.
+
 ## Persistent Data
 
 All data is stored in `/share/openclaw/` and survives add-on updates and restarts:

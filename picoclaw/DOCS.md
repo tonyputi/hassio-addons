@@ -20,7 +20,6 @@ This add-on installs PicoClaw using pre-built binaries and runs the **launcher w
 | ----------------- | :------: | ------- | ----------- |
 | `timezone`        | No       | `UTC`   | System timezone for cron scheduling (IANA format, e.g. `Europe/Rome`) |
 | `ha_mcp_enabled`  | No       | `false` | Allow the AI agent to read and control Home Assistant entities via MCP |
-| `tavily_api_key`  | No       | —       | Tavily API key for AI-optimized web search (see [Tavily search](#tavily-search)) |
 
 ## Web UI
 
@@ -53,11 +52,13 @@ The add-on uses the Supervisor token automatically — no manual token setup req
 
 > **Security note:** Restrict channel access (e.g. Telegram `allow_from`) to your user ID to prevent unauthorized control of your home.
 
-## Tavily search
+## Browser automation
 
-When `tavily_api_key` is set, PicoClaw uses [Tavily](https://tavily.com) as its primary web search engine. Tavily is optimized for AI agents and can retrieve structured content from JavaScript-heavy sites (Booking.com, Airbnb, news sites, etc.) that DuckDuckGo cannot index effectively.
+Browser automation is **not available by default**. To enable it, install the **Browserless Chromium** add-on from the [alexbelgium repository](https://github.com/alexbelgium/hassio-addons).
 
-Get a free API key at [tavily.com](https://tavily.com) and paste it in the add-on options.
+Once installed and running, PicoClaw automatically detects it at boot and configures the browser tool to use it. No manual configuration is needed — just restart PicoClaw after installing the browser add-on.
+
+Without the browser add-on, all other tools (web search, memory, MCP, scheduling) continue to work normally.
 
 ## Web terminal
 

@@ -65,6 +65,19 @@ You can edit workspace files using the Home Assistant **File Editor** add-on or 
 
 After the first start, you can edit `config.toml` directly for options not exposed in the add-on UI. Changes take effect after restarting the add-on.
 
+## Browser automation
+
+Browser automation is **not available by default**. To enable it, install the **Browserless Chromium** add-on from the [alexbelgium repository](https://github.com/alexbelgium/hassio-addons).
+
+Once installed and running, ZeroClaw automatically detects it at boot and configures the browser tool to use it. No manual configuration is needed — just restart ZeroClaw after installing the browser add-on.
+
+With browser automation enabled, the AI agent can:
+- Open and navigate web pages
+- Fill forms, click buttons, take screenshots
+- Extract content from JavaScript-heavy sites
+
+Without the browser add-on, all other tools (web search, memory, MCP, scheduling, file operations) continue to work normally.
+
 ## Support
 
 - ZeroClaw docs: https://www.zeroclawlabs.ai
