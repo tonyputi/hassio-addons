@@ -117,7 +117,10 @@ bashio::log.info "Gateway configured (port=42617, pairing=${PAIRING_VAL})."
 
 # ── Browser addon auto-detect ─────────────────────────────────────────────────
 BROWSER_CDP_PORT=$(bashio::config 'browser_cdp_port')
-HOST_IP=$(ip route show default 2>/dev/null | awk '/default/ {print $3; exit}')
+HOST_IP=""
+if command -v ip > /dev/null 2>&1; then
+    HOST_IP=$(ip route show default 2>/dev/null | awk '/default/ {print $3; exit}') || true
+fi
 if [ -z "${HOST_IP}" ]; then HOST_IP="172.30.32.1"; fi
 BROWSER_CDP_URL="ws://${HOST_IP}:${BROWSER_CDP_PORT}"
 BROWSER_DETECTED=false
