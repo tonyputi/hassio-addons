@@ -50,17 +50,6 @@ jq --argjson pairing "${PAIRING_VAL}" \
     "${CONFIG_FILE}" > /tmp/nc_tmp.json && mv /tmp/nc_tmp.json "${CONFIG_FILE}"
 bashio::log.info "Gateway configured (port=43000, pairing=${PAIRING_VAL})."
 
-# ── Browser addon auto-detect ─────────────────────────────────────────────────
-BROWSER_CDP_PORT=$(bashio::config 'browser_cdp_port')
-BROWSER_CDP_URL="ws://localhost:${BROWSER_CDP_PORT}"
-if curl -sf "http://localhost:${BROWSER_CDP_PORT}/json/version" > /dev/null 2>&1; then
-    bashio::log.info "Browser addon detected — configuring agent-browser CDP at ${BROWSER_CDP_URL}"
-    mkdir -p "${HOME}/.agent-browser"
-    printf '{"cdp":"%s"}\n' "${BROWSER_CDP_URL}" > "${HOME}/.agent-browser/config.json"
-else
-    bashio::log.info "No browser addon detected — browser tools unavailable. Install browserless_chrome addon to enable."
-fi
-
 # ── Start gateway ─────────────────────────────────────────────────────────────
 bashio::log.info "Starting NullClaw gateway on port 43000..."
 exec nullclaw gateway

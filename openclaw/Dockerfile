@@ -28,7 +28,7 @@ RUN ARCH=$(uname -m | sed 's/x86_64/x86_64/;s/aarch64/aarch64/') && \
       -o /usr/local/bin/ttyd && \
     chmod +x /usr/local/bin/ttyd
 
-ARG ROOTFS_VERSION=1
+ARG ROOTFS_VERSION=2
 COPY rootfs /
 RUN chmod +x \
     /etc/s6-overlay/s6-rc.d/openclaw/run \

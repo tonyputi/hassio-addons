@@ -55,8 +55,18 @@ fi
 
 # ── Browser addon auto-detect ─────────────────────────────────────────────────
 BROWSER_CDP_PORT=$(bashio::config 'browser_cdp_port')
-BROWSER_CDP_URL="ws://localhost:${BROWSER_CDP_PORT}"
-if curl -sf "http://localhost:${BROWSER_CDP_PORT}/json/version" > /dev/null 2>&1; then
+HOST_IP=$(ip route show default 2>/dev/null | awk '/default/ {print $3; exit}')
+if [ -z "${HOST_IP}" ]; then HOST_IP="172.30.32.1"; fi
+BROWSER_CDP_URL="ws://${HOST_IP}:${BROWSER_CDP_PORT}"
+BROWSER_DETECTED=false
+for i in 1 2 3 4 5 6; do
+    if curl -sf "http://${HOST_IP}:${BROWSER_CDP_PORT}/json/version" > /dev/null 2>&1; then
+        BROWSER_DETECTED=true
+        break
+    fi
+    [ "${i}" -lt 6 ] && bashio::log.info "Waiting for browser addon... (${i}/6)" && sleep 5
+done
+if [ "${BROWSER_DETECTED}" = "true" ]; then
     bashio::log.info "Browser addon detected — configuring CDP at ${BROWSER_CDP_URL}"
     jq --arg cdp "${BROWSER_CDP_URL}" '.cdpUrl = $cdp' \
         "${CONFIG_FILE}" > /tmp/oc_tmp.json && mv /tmp/oc_tmp.json "${CONFIG_FILE}"

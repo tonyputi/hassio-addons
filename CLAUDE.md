@@ -35,7 +35,7 @@ Every add-on follows this layout:
 - **ttyd**: always version 1.7.7, downloaded from GitHub releases, port 7681 (ingress)
 - **Persistent data**: `/share/<addon>/` — survives restarts and updates
 - **Config location**: `/share/<addon>/.<addon>/` (e.g. `.zeroclaw/config.toml`, `.nullclaw/config.json`)
-- **HA options**: exactly three — `timezone` (str), `ha_mcp_enabled` (bool), `gateway_pairing` (bool) — except PicoClaw which has no `gateway_pairing`
+- **HA options**: `timezone` (str), `ha_mcp_enabled` (bool), `gateway_pairing` (bool) — PicoClaw has no `gateway_pairing`; ZeroClaw/PicoClaw/OpenClaw also have `browser_cdp_port` (int); NullClaw has no browser CDP option
 - **boot**: `auto` on all four
 - **panel_icon**: `mdi:robot` on all four
 - **run scripts**: use `bashio::config`, `bashio::var.true/false`, `bashio::log.info/warning/fatal`
@@ -52,7 +52,7 @@ Every add-on follows this layout:
 | First run | `zeroclaw onboard` | launcher web UI | `openclaw configure` | `nullclaw onboard --interactive` |
 | `gateway_pairing` | `require_pairing` in TOML | — (always auth) | `dangerouslyDisableDeviceAuth` in JSON | `require_pairing` in JSON |
 | MCP key | `[[mcp.servers]]` TOML append | `tools.mcp.servers` jq merge | `mcpServers` jq merge | `mcp_servers` jq merge |
-| Browser CDP | `~/.agent-browser/config.json` | `~/.agent-browser/config.json` | `cdpUrl` in openclaw.json | `~/.agent-browser/config.json` |
+| Browser CDP | `~/.agent-browser/config.json` | `~/.agent-browser/config.json` | `cdpUrl` in openclaw.json | None (uses xdg-open only; no CDP support) |
 
 ## Versioning and releases
 
