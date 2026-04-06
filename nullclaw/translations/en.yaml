@@ -1,0 +1,10 @@
+configuration:
+  timezone:
+    name: "Timezone"
+    description: "Timezone for scheduling. Use IANA format, e.g. Europe/Rome, America/New_York, Asia/Tokyo."
+  ha_mcp_enabled:
+    name: "Enable Home Assistant MCP"
+    description: "Allow the AI agent to read and control Home Assistant entities (lights, sensors, automations) via MCP."
+  gateway_pairing:
+    name: "Require Gateway Pairing"
+    description: "When enabled, the web gateway requires a one-time pairing code on first access. Disable only on trusted local networks."

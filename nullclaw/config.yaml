@@ -1,0 +1,34 @@
+name: "NullClaw"
+version: "0.1.0"
+slug: "nullclaw"
+description: "Fastest, smallest fully autonomous AI assistant — 678 KB Zig binary, ~1 MB RAM"
+url: "https://github.com/nullclaw/nullclaw"
+arch:
+  - aarch64
+  - amd64
+startup: services
+boot: auto
+init: false
+
+options:
+  timezone: UTC
+  ha_mcp_enabled: false
+  gateway_pairing: true
+
+schema:
+  timezone: str
+  ha_mcp_enabled: bool
+  gateway_pairing: bool
+
+map:
+  - share:rw
+ports:
+  "43000/tcp": 43000
+ports_description:
+  "43000/tcp": "NullClaw Gateway"
+ingress: true
+ingress_port: 7681
+panel_icon: mdi:robot
+
+hassio_api: true
+homeassistant_api: true

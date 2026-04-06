@@ -4,6 +4,8 @@
   <img src="picoclaw/icon.png" alt="PicoClaw" width="72" />
   &nbsp;&nbsp;&nbsp;
   <img src="openclaw/icon.png" alt="OpenClaw" width="72" />
+  &nbsp;&nbsp;&nbsp;
+  <img src="nullclaw/icon.png" alt="NullClaw" width="72" />
 </p>
 
 <h1 align="center">AI Add-ons for Home Assistant</h1>
@@ -23,18 +25,18 @@
 
 ## Add-ons
 
-| | [ZeroClaw](zeroclaw/) | [PicoClaw](picoclaw/) | [OpenClaw](openclaw/) |
-| --- | --- | --- | --- |
-| **Based on** | [ZeroClaw Labs](https://www.zeroclawlabs.ai) | [Sipeed PicoClaw](https://picoclaw.io) | [OpenClaw](https://openclaw.ai) |
-| **Language** | Rust | Go | Node.js |
-| **RAM** | ~100MB | < 10MB | ~150MB |
-| **Web UI** | Port 42617 (built-in dashboard) | Port 18800 (launcher) | Port 38789 (gateway) |
-| **Web terminal** | ✓ (ttyd, ingress) | ✓ (ttyd, ingress) | ✓ (ttyd, ingress) |
-| **Telegram** | ✓ (via web UI) | ✓ (via web UI) | ✓ (via gateway) |
-| **Home Assistant MCP** | ✓ | ✓ | ✓ |
-| **Web search** | DuckDuckGo | DuckDuckGo + Tavily (optional) | Built-in |
-| **Channels** | Telegram | Telegram, Discord, Matrix, Slack, IRC, and more | Telegram, WhatsApp, and more |
-| **Best for** | Full-featured daemon with persistent memory | Ultra-lightweight, multi-channel, low-power devices | Node.js-based agent with gateway UI |
+| | [ZeroClaw](zeroclaw/) | [PicoClaw](picoclaw/) | [OpenClaw](openclaw/) | [NullClaw](nullclaw/) |
+| --- | --- | --- | --- | --- |
+| **Based on** | [ZeroClaw Labs](https://www.zeroclawlabs.ai) | [Sipeed PicoClaw](https://picoclaw.io) | [OpenClaw](https://openclaw.ai) | [nullclaw/nullclaw](https://github.com/nullclaw/nullclaw) |
+| **Language** | Rust | Go | Node.js | Zig |
+| **RAM** | ~100MB | < 10MB | ~150MB | ~1MB |
+| **Web UI** | Port 42617 (built-in dashboard) | Port 18800 (launcher) | Port 38789 (gateway) | Port 43000 (gateway) |
+| **Web terminal** | ✓ (ttyd, ingress) | ✓ (ttyd, ingress) | ✓ (ttyd, ingress) | ✓ (ttyd, ingress) |
+| **Telegram** | ✓ | ✓ | ✓ | ✓ |
+| **Home Assistant MCP** | ✓ | ✓ | ✓ | ✓ |
+| **Web search** | DuckDuckGo | DuckDuckGo | Built-in | Built-in |
+| **Channels** | Telegram | Telegram, Discord, Matrix, Slack, IRC, and more | Telegram, WhatsApp, and more | 19 channels |
+| **Best for** | Full-featured daemon with persistent memory | Ultra-lightweight, multi-channel, low-power devices | Node.js-based agent with gateway UI | Absolute minimal footprint, edge hardware |
 
 ---
 
@@ -50,7 +52,7 @@
 
 1. In Home Assistant go to **Settings → Add-ons → Add-on Store**
 2. Click **⋮ → Repositories** and add: `https://github.com/tonyputi/hassio-addons`
-3. Find **ZeroClaw**, **PicoClaw**, or **OpenClaw** in the store and install
+3. Find **ZeroClaw**, **PicoClaw**, **OpenClaw**, or **NullClaw** in the store and install
 
 ---
 
@@ -123,9 +125,37 @@ A Node.js-based AI agent with a browser gateway. Supports multiple LLM providers
 
 ---
 
+## NullClaw
+
+<p>
+  <img src="https://img.shields.io/badge/NullClaw-v2026.4.4-blue" />
+  &nbsp;
+  <img src="https://img.shields.io/badge/Raspberry%20Pi-supported-brightgreen" />
+  &nbsp;
+  <img src="https://img.shields.io/badge/amd64-supported-brightgreen" />
+  &nbsp;
+  <img src="https://img.shields.io/badge/RAM-~1MB-orange" />
+</p>
+
+The smallest fully autonomous AI assistant — a 678 KB static Zig binary. Boots in milliseconds, uses ~1 MB of RAM. Runs on any $5 board.
+
+**Quick start:** Install, open the web terminal from the sidebar, run `nullclaw onboard --interactive`, then restart the add-on. The gateway is at `http://<ha-ip>:43000`.
+
+**Features:**
+- **50+ LLM providers** — OpenAI, Anthropic, Gemini, DeepSeek, Groq, Ollama, and more
+- **19 messaging channels** — Telegram, Discord, Matrix, Slack, IRC, WhatsApp, and more
+- **Home Assistant MCP** — read and control entities via chat
+- **Gateway pairing** — one-time device pairing for secure access
+- **Web terminal** — built-in ttyd terminal accessible from the HA sidebar
+
+→ [NullClaw documentation](nullclaw/DOCS.md) · [Changelog](nullclaw/CHANGELOG.md) · [github.com/nullclaw/nullclaw](https://github.com/nullclaw/nullclaw)
+
+---
+
 ## Support
 
 - Issues with these add-ons: [open an issue](https://github.com/tonyputi/hassio-addons/issues)
 - ZeroClaw: [zeroclawlabs.ai](https://www.zeroclawlabs.ai)
 - PicoClaw: [picoclaw.io](https://picoclaw.io)
 - OpenClaw: [openclaw.ai](https://openclaw.ai)
+- NullClaw: [github.com/nullclaw/nullclaw](https://github.com/nullclaw/nullclaw)

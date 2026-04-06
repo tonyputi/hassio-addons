@@ -1,0 +1,65 @@
+#!/command/with-contenv bashio
+# shellcheck shell=bash
+set -e
+
+export HOME="/share/nullclaw"
+export SHELL="/bin/bash"
+
+NULLCLAW_DATA="${HOME}/.nullclaw"
+CONFIG_FILE="${NULLCLAW_DATA}/config.json"
+
+mkdir -p "${NULLCLAW_DATA}" "${HOME}/workspace"
+
+# ── Timezone ──────────────────────────────────────────────────────────────────
+TIMEZONE=$(bashio::config 'timezone')
+if [ -f "/usr/share/zoneinfo/${TIMEZONE}" ]; then
+    ln -sf "/usr/share/zoneinfo/${TIMEZONE}" /etc/localtime
+    echo "${TIMEZONE}" > /etc/timezone
+    bashio::log.info "Timezone set to ${TIMEZONE}"
+else
+    bashio::log.warning "Unknown timezone '${TIMEZONE}', falling back to UTC."
+fi
+
+# ── First-run guard ───────────────────────────────────────────────────────────
+if [ ! -f "${CONFIG_FILE}" ]; then
+    bashio::log.fatal "No configuration found. Open the web terminal and run: nullclaw onboard --interactive"
+    exit 1
+fi
+
+# ── Home Assistant MCP integration ────────────────────────────────────────────
+HA_MCP_ENABLED=$(bashio::config 'ha_mcp_enabled')
+if bashio::var.true "${HA_MCP_ENABLED}"; then
+    bashio::log.info "Configuring Home Assistant MCP integration..."
+    jq --arg token "${SUPERVISOR_TOKEN}" \
+        '.mcp_servers["home-assistant"] = {
+            "transport": "http",
+            "url": "http://supervisor/core/api/mcp",
+            "headers": [{"key": "Authorization", "value": ("Bearer " + $token)}]
+        }' \
+        "${CONFIG_FILE}" > /tmp/nc_tmp.json && mv /tmp/nc_tmp.json "${CONFIG_FILE}"
+    bashio::log.info "Home Assistant MCP configured."
+fi
+
+# ── Gateway pairing ───────────────────────────────────────────────────────────
+GATEWAY_PAIRING=$(bashio::config 'gateway_pairing')
+PAIRING_VAL="true"
+if bashio::var.false "${GATEWAY_PAIRING}"; then PAIRING_VAL="false"; fi
+
+jq --argjson pairing "${PAIRING_VAL}" \
+    '.gateway.host = "0.0.0.0" | .gateway.port = 43000 | .gateway.require_pairing = $pairing' \
+    "${CONFIG_FILE}" > /tmp/nc_tmp.json && mv /tmp/nc_tmp.json "${CONFIG_FILE}"
+bashio::log.info "Gateway configured (port=43000, pairing=${PAIRING_VAL})."
+
+# ── Browser addon auto-detect (browserless_chrome on port 3000) ───────────────
+BROWSER_CDP_URL="ws://localhost:3000"
+if curl -sf "http://localhost:3000/json/version" > /dev/null 2>&1; then
+    bashio::log.info "Browser addon detected — configuring agent-browser CDP at ${BROWSER_CDP_URL}"
+    mkdir -p "${HOME}/.agent-browser"
+    printf '{"cdp":"%s"}\n' "${BROWSER_CDP_URL}" > "${HOME}/.agent-browser/config.json"
+else
+    bashio::log.info "No browser addon detected — browser tools unavailable. Install browserless_chrome addon to enable."
+fi
+
+# ── Start gateway ─────────────────────────────────────────────────────────────
+bashio::log.info "Starting NullClaw gateway on port 43000..."
+exec nullclaw gateway
