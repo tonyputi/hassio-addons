@@ -4,7 +4,11 @@ FROM ${BUILD_FROM}
 ARG OPENCLAW_VERSION="2026.4.2"
 
 # Install Node.js 22 (OpenClaw requires Node 20+, bookworm ships Node 18)
-RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key \
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends gnupg && \
+    rm -rf /var/lib/apt/lists/* && \
+    mkdir -p /etc/apt/keyrings && \
+    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key \
       | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \
     echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] \
       https://deb.nodesource.com/node_22.x nodistro main" \
