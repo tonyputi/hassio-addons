@@ -22,8 +22,8 @@ RUN apt-get update && \
 # Verify Node.js version
 RUN node --version | grep -E '^v22\.' || { echo "ERROR: Node.js 22 required"; exit 1; }
 
-# Install OpenClaw
-RUN npm install -g openclaw@${OPENCLAW_VERSION} --audit=false --fund=false
+# Install OpenClaw and required peer dependencies
+RUN npm install -g openclaw@${OPENCLAW_VERSION} @buape/carbon --audit=false --fund=false
 
 # Install ttyd (consistent with ZeroClaw/PicoClaw pattern)
 RUN ARCH=$(uname -m | sed 's/x86_64/x86_64/;s/aarch64/aarch64/') && \
