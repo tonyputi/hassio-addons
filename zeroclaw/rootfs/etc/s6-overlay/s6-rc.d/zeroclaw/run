@@ -47,31 +47,15 @@ else
     bashio::log.warning "Unknown timezone '${TIMEZONE}', falling back to UTC."
 fi
 
-# ── Remove only the managed 'home-assistant' MCP server block ────────────────
-# Uses Node.js (guaranteed available) to strip the [[mcp.servers]] block where
-# name = "home-assistant", leaving all other [[mcp.servers]] blocks intact.
-cat > /tmp/mcp_strip_ha.js <<'JSEOF'
-const fs = require('fs');
-const f = process.argv[2];
-const lines = fs.readFileSync(f, 'utf8').split('\n');
-const out = [];
-let buf = [], inServer = false, isHA = false;
-for (const line of lines) {
-  if (line === '[[mcp.servers]]') {
-    if (inServer && !isHA) out.push(...buf);
-    buf = [line]; inServer = true; isHA = false;
-  } else if (inServer) {
-    if (/^\s*name\s*=\s*"home-assistant"/.test(line)) isHA = true;
-    if (line.startsWith('[') && line !== '[[mcp.servers]]' && !line.startsWith('[mcp.servers.')) {
-      if (!isHA) out.push(...buf);
-      buf = []; inServer = false; isHA = false; out.push(line);
-    } else { buf.push(line); }
-  } else { out.push(line); }
-}
-if (inServer && !isHA) out.push(...buf);
-fs.writeFileSync(f, out.join('\n'));
-JSEOF
-node /tmp/mcp_strip_ha.js "${CONFIG_FILE}"
+# ── Remove all managed [[mcp.servers]] entries before re-injection ────────────
+# Truncate at the first [[mcp.servers]] line so the section is rewritten clean
+# on every start, preventing duplicate key accumulation in the TOML file.
+# NOTE: grep exits 1 on no match — || true avoids aborting with set -e.
+line=$(grep -n '^\[\[mcp\.servers\]\]' "${CONFIG_FILE}" 2>/dev/null | head -1 | cut -d: -f1 || true)
+if [ -n "${line}" ] && [ "${line}" -gt 1 ]; then
+    head -n $((line - 1)) "${CONFIG_FILE}" > "${CONFIG_FILE}.tmp"
+    mv "${CONFIG_FILE}.tmp" "${CONFIG_FILE}"
+fi
 
 # ── Home Assistant MCP integration ────────────────────────────────────────────
 HA_MCP_ENABLED=$(bashio::config 'ha_mcp_enabled')
