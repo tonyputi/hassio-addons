@@ -2,7 +2,7 @@ ARG BUILD_FROM
 FROM ${BUILD_FROM}
 
 ARG BUILD_ARCH
-ARG NULLCLAW_VERSION="2026.4.4"
+ARG NULLCLAW_VERSION="2026.4.9"
 
 # Install base dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \

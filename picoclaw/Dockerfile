@@ -2,7 +2,7 @@ ARG BUILD_FROM
 FROM ${BUILD_FROM}
 
 ARG BUILD_ARCH
-ARG PICOCLAW_VERSION="0.2.4"
+ARG PICOCLAW_VERSION="0.2.6"
 
 # Install base dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \

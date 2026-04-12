@@ -2,8 +2,8 @@ ARG BUILD_FROM
 FROM ${BUILD_FROM}
 
 ARG BUILD_ARCH
-ARG ZEROCLAW_VERSION="0.6.8"
-ARG AGENT_BROWSER_VERSION="0.24.1"
+ARG ZEROCLAW_VERSION="0.6.9"
+ARG AGENT_BROWSER_VERSION="0.25.3"
 
 # Install base dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \

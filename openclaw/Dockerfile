@@ -1,7 +1,7 @@
 ARG BUILD_FROM
 FROM ${BUILD_FROM}
 
-ARG OPENCLAW_VERSION="2026.4.2"
+ARG OPENCLAW_VERSION="2026.4.11"
 
 # Install Node.js 22 (OpenClaw requires Node 20+, bookworm ships Node 18)
 RUN apt-get update && \
