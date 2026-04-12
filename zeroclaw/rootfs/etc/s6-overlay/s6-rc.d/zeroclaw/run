@@ -47,15 +47,23 @@ else
     bashio::log.warning "Unknown timezone '${TIMEZONE}', falling back to UTC."
 fi
 
-# ── Remove managed MCP section before re-injection ───────────────────────────
-# [[mcp.servers]] is always appended — truncate at the marker so it is
-# rewritten on every start, keeping ha_mcp_enabled as source of truth.
-# NOTE: grep exits 1 on no match — use || true to avoid aborting with set -e.
-line=$(grep -n '^\[\[mcp\.servers\]\]' "${CONFIG_FILE}" 2>/dev/null | head -1 | cut -d: -f1 || true)
-if [ -n "${line}" ] && [ "${line}" -gt 1 ]; then
-    head -n $((line - 1)) "${CONFIG_FILE}" > "${CONFIG_FILE}.tmp"
-    mv "${CONFIG_FILE}.tmp" "${CONFIG_FILE}"
-fi
+# ── Remove only the managed 'home-assistant' MCP server block ────────────────
+# Uses awk to strip the [[mcp.servers]] block where name = "home-assistant",
+# leaving all other [[mcp.servers]] blocks (user-defined) intact.
+awk '
+    /^\[\[mcp\.servers\]\]/ {
+        if (in_server && !is_ha) printf "%s", buf
+        in_server=1; buf=$0"\n"; is_ha=0; next
+    }
+    in_server && /^name = "home-assistant"/ { is_ha=1 }
+    in_server && /^\[/ && !/^\[\[mcp\.servers\]\]/ {
+        if (!is_ha) printf "%s", buf
+        in_server=0; buf=""; is_ha=0; print; next
+    }
+    in_server { buf=buf $0"\n"; next }
+    { print }
+    END { if (in_server && !is_ha) printf "%s", buf }
+' "${CONFIG_FILE}" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "${CONFIG_FILE}"
 
 # ── Home Assistant MCP integration ────────────────────────────────────────────
 HA_MCP_ENABLED=$(bashio::config 'ha_mcp_enabled')
