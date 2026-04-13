@@ -47,17 +47,11 @@ else
     bashio::log.warning "Unknown timezone '${TIMEZONE}', falling back to UTC."
 fi
 
-# ── Remove all managed [[mcp.servers]] entries before re-injection ────────────
-# Truncate at the first [[mcp.servers]] line so the section is rewritten clean
-# on every start, preventing duplicate key accumulation in the TOML file.
-# NOTE: grep exits 1 on no match — || true avoids aborting with set -e.
-line=$(grep -n '^\[\[mcp\.servers\]\]' "${CONFIG_FILE}" 2>/dev/null | head -1 | cut -d: -f1 || true)
-if [ -n "${line}" ] && [ "${line}" -gt 1 ]; then
-    head -n $((line - 1)) "${CONFIG_FILE}" > "${CONFIG_FILE}.tmp"
-    mv "${CONFIG_FILE}.tmp" "${CONFIG_FILE}"
-fi
-
 # ── Home Assistant MCP integration ────────────────────────────────────────────
+# yq removes only the managed home-assistant entry by name, leaving any
+# user-defined [[mcp.servers]] entries intact. No truncation needed.
+yq -i 'del(.mcp.servers[] | select(.name == "home-assistant"))' -p toml -o toml "${CONFIG_FILE}"
+
 HA_MCP_ENABLED=$(bashio::config 'ha_mcp_enabled')
 if bashio::var.true "${HA_MCP_ENABLED}"; then
     if grep -q '^\[mcp\]' "${CONFIG_FILE}" 2>/dev/null; then
@@ -79,16 +73,10 @@ EOF
         sed -i '/^\[autonomy\]/,/^\[/{s/^require_approval_for_medium_risk = true$/require_approval_for_medium_risk = false/}' "${CONFIG_FILE}"
     fi
 
-    HA_TOKEN="${SUPERVISOR_TOKEN}"
+    export HA_TOKEN="${SUPERVISOR_TOKEN}"
     bashio::log.info "Writing Home Assistant MCP server configuration..."
-    cat >> "${CONFIG_FILE}" <<EOF
-
-[[mcp.servers]]
-name = "home-assistant"
-transport = "http"
-url = "http://supervisor/core/api/mcp"
-headers = { Authorization = "Bearer ${HA_TOKEN}" }
-EOF
+    yq -i '.mcp.servers += [{"name": "home-assistant", "transport": "http", "url": "http://supervisor/core/api/mcp", "headers": {"Authorization": ("Bearer " + env(HA_TOKEN))}}]' -p toml -o toml "${CONFIG_FILE}"
+    bashio::log.info "Home Assistant MCP server configured."
 fi
 
 # ── Gateway: bind to 0.0.0.0 for direct port access ──────────────────────────
