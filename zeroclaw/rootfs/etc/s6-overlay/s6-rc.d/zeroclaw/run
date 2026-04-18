@@ -43,15 +43,23 @@ else
     bashio::log.warning "Unknown timezone '${TIMEZONE}', falling back to UTC."
 fi
 
-# ── Remove all managed [[mcp.servers]] entries before re-injection ────────────
-# Truncate at the first [[mcp.servers]] line so the section is rewritten clean
-# on every start, preventing duplicate key accumulation in the TOML file.
-# NOTE: grep exits 1 on no match — || true avoids aborting with set -e.
-line=$(grep -n '^\[\[mcp\.servers\]\]' "${CONFIG_FILE}" 2>/dev/null | head -1 | cut -d: -f1 || true)
-if [ -n "${line}" ] && [ "${line}" -gt 1 ]; then
-    head -n $((line - 1)) "${CONFIG_FILE}" > "${CONFIG_FILE}.tmp"
-    mv "${CONFIG_FILE}.tmp" "${CONFIG_FILE}"
-fi
+# ── Remove only the managed home-assistant MCP block before re-injection ───────
+# Uses awk to surgically remove the [[mcp.servers]] block with name = "home-assistant"
+# while leaving all user-defined [[mcp.servers]] entries untouched.
+MCP_HA="${ZEROCLAW_DATA}/mcp-ha.toml"
+awk '
+BEGIN { in_block=0; ha_block=0; block_buf="" }
+/^\[/ {
+    if (block_buf != "" && !ha_block) printf "%s", block_buf
+    block_buf = ""; ha_block = 0
+    if (/^\[\[mcp\.servers\]\]/) { in_block=1; block_buf=$0 "\n" }
+    else { in_block=0; print }
+    next
+}
+in_block { block_buf=block_buf $0 "\n"; if (/^name = "home-assistant"/) ha_block=1; next }
+{ print }
+END { if (block_buf != "" && !ha_block) printf "%s", block_buf }
+' "${CONFIG_FILE}" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "${CONFIG_FILE}"
 
 # ── Home Assistant MCP integration ────────────────────────────────────────────
 HA_MCP_ENABLED=$(bashio::config 'ha_mcp_enabled')
@@ -76,8 +84,7 @@ EOF
     fi
 
     HA_TOKEN="${SUPERVISOR_TOKEN}"
-    bashio::log.info "Writing Home Assistant MCP server configuration..."
-    cat >> "${CONFIG_FILE}" <<EOF
+    cat > "${MCP_HA}" <<EOF
 
 [[mcp.servers]]
 name = "home-assistant"
@@ -85,6 +92,10 @@ transport = "http"
 url = "http://supervisor/core/api/mcp"
 headers = { Authorization = "Bearer ${HA_TOKEN}" }
 EOF
+    cat "${MCP_HA}" >> "${CONFIG_FILE}"
+    bashio::log.info "Home Assistant MCP server configured."
+else
+    rm -f "${MCP_HA}"
 fi
 
 # ── Gateway: bind to 0.0.0.0 for direct port access ──────────────────────────
@@ -131,15 +142,6 @@ if [ "${BROWSER_DETECTED}" = "true" ]; then
     printf '{"cdp":"%s"}\n' "${BROWSER_CDP_URL}" > "${HOME}/.agent-browser/config.json"
 else
     bashio::log.info "No browser addon detected — browser tools unavailable. Install browserless_chrome addon to enable."
-fi
-
-# ── User-defined MCP servers ──────────────────────────────────────────────────
-# Create /share/zeroclaw/.zeroclaw/mcp_extra.toml to add persistent MCP servers.
-# This file is appended as-is after managed servers and survives restarts/updates.
-MCP_EXTRA="${ZEROCLAW_DATA}/mcp_extra.toml"
-if [ -f "${MCP_EXTRA}" ]; then
-    cat "${MCP_EXTRA}" >> "${CONFIG_FILE}"
-    bashio::log.info "User MCP servers loaded from mcp_extra.toml"
 fi
 
 # ── Start daemon ──────────────────────────────────────────────────────────────
