@@ -4,7 +4,6 @@ FROM ${BUILD_FROM}
 ARG BUILD_ARCH
 ARG ZEROCLAW_VERSION="0.6.9"
 ARG AGENT_BROWSER_VERSION="0.25.3"
-ARG YQ_VERSION="4.52.5"
 
 # Install base dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -43,17 +42,6 @@ RUN case "${BUILD_ARCH}" in \
       "https://github.com/tsl0922/ttyd/releases/download/1.7.7/ttyd.${TTYD_ARCH}" \
       -o /usr/local/bin/ttyd && \
     chmod +x /usr/local/bin/ttyd
-
-# Download yq for surgical TOML manipulation (manage [[mcp.servers]] by name)
-RUN case "${BUILD_ARCH}" in \
-      aarch64) YQ_ARCH="arm64" ;; \
-      amd64)   YQ_ARCH="amd64" ;; \
-      *) echo "Unsupported arch: ${BUILD_ARCH}" && exit 1 ;; \
-    esac && \
-    curl -fsSL \
-      "https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/yq_linux_${YQ_ARCH}" \
-      -o /usr/local/bin/yq && \
-    chmod +x /usr/local/bin/yq
 
 # Cache-bust: increment when rootfs scripts change to force layer rebuild
 ARG ROOTFS_VERSION=16
