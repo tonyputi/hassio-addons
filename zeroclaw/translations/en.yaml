@@ -11,3 +11,6 @@ configuration:
   browser_cdp_port:
     name: "Browser CDP Port"
     description: "Port of the Browserless Chromium add-on (alexbelgium). Default is 3000. Change only if you configured a custom port in that add-on."
+  env_vars:
+    name: "Environment Variables"
+    description: "Optional environment variables injected into the ZeroClaw process at startup. Use this to pass provider API keys (e.g. ANTHROPIC_API_KEY, OPENAI_API_KEY) or any custom variable your tools require."

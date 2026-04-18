@@ -15,19 +15,15 @@ mkdir -p "${ZEROCLAW_DATA}" "${HOME}/workspace"
 mkdir -p /usr/local/var
 ln -sfn "${ZEROCLAW_DATA}" /usr/local/var/zeroclaw
 
-# ── Inject provider API keys from .env file into container environment ────────
-# Create /share/zeroclaw/.zeroclaw/.env with KEY=value pairs to expose
-# additional provider keys (e.g. OPENAI_API_KEY, GROQ_API_KEY) to the daemon.
-ENV_FILE="${ZEROCLAW_DATA}/.env"
-if [ -f "${ENV_FILE}" ]; then
-    while IFS='=' read -r key value || [ -n "$key" ]; do
-        [ -z "$key" ] && continue
-        case "$key" in \#*) continue ;; esac
-        export "${key}=${value}"
-        printf '%s' "${value}" > "/var/run/s6/container_environment/${key}" 2>/dev/null || true
-    done < "${ENV_FILE}"
-    bashio::log.info "Provider env vars loaded from .env"
-fi
+# ── Inject environment variables from HA UI configuration ────────────────────
+for index in $(bashio::config 'env_vars|keys[]' 2>/dev/null || true); do
+    name=$(bashio::config "env_vars[${index}].name")
+    value=$(bashio::config "env_vars[${index}].value")
+    [ -z "${name}" ] && continue
+    export "${name}=${value}"
+    printf '%s' "${value}" > "/var/run/s6/container_environment/${name}" 2>/dev/null || true
+    bashio::log.info "Env var set: ${name}"
+done
 
 # ── First-run guard ───────────────────────────────────────────────────────────
 if [ ! -f "${CONFIG_FILE}" ]; then
