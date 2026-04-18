@@ -133,6 +133,15 @@ else
     bashio::log.info "No browser addon detected — browser tools unavailable. Install browserless_chrome addon to enable."
 fi
 
+# ── User-defined MCP servers ──────────────────────────────────────────────────
+# Create /share/zeroclaw/.zeroclaw/mcp_extra.toml to add persistent MCP servers.
+# This file is appended as-is after managed servers and survives restarts/updates.
+MCP_EXTRA="${ZEROCLAW_DATA}/mcp_extra.toml"
+if [ -f "${MCP_EXTRA}" ]; then
+    cat "${MCP_EXTRA}" >> "${CONFIG_FILE}"
+    bashio::log.info "User MCP servers loaded from mcp_extra.toml"
+fi
+
 # ── Start daemon ──────────────────────────────────────────────────────────────
 bashio::log.info "Starting ZeroClaw daemon..."
 exec /usr/local/bin/zeroclaw daemon
