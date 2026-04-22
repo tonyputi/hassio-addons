@@ -56,6 +56,11 @@ else
     bashio::log.warning "Unknown timezone '${TIMEZONE}', falling back to UTC."
 fi
 
+# ── V2 compat: remove inline "servers = [...]" from [mcp] section ────────────
+# ZeroClaw 0.7.x may rewrite [[mcp.servers]] as inline arrays; we always use the
+# array-of-tables form so we strip any inline definition to avoid duplicate keys.
+sed -i '/^\[mcp\]/,/^\[/{/^servers = \[/d}' "${CONFIG_FILE}"
+
 # ── Remove only the managed home-assistant MCP block before re-injection ───────
 # Uses awk to surgically remove the [[mcp.servers]] block with name = "home-assistant"
 # while leaving all user-defined [[mcp.servers]] entries untouched.
