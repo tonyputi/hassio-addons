@@ -31,6 +31,19 @@ if [ ! -f "${CONFIG_FILE}" ]; then
     exit 1
 fi
 
+# ── One-time config V2 migration (0.7.0+) ─────────────────────────────────────
+MIGRATED_MARKER="${ZEROCLAW_DATA}/.v2_migrated"
+if [ ! -f "${MIGRATED_MARKER}" ]; then
+    bashio::log.info "Running one-time config migration to V2..."
+    if /usr/local/bin/zeroclaw config migrate 2>&1; then
+        touch "${MIGRATED_MARKER}"
+        bashio::log.info "Config migration to V2 completed."
+    else
+        bashio::log.warning "Config migration failed — continuing with existing config."
+        touch "${MIGRATED_MARKER}"
+    fi
+fi
+
 # ── Read options ──────────────────────────────────────────────────────────────
 TIMEZONE=$(bashio::config 'timezone')
 
