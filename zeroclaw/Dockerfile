@@ -29,7 +29,7 @@ RUN case "${BUILD_ARCH}" in \
     esac && \
     curl -fsSL \
       "https://github.com/zeroclaw-labs/zeroclaw/releases/download/v${ZEROCLAW_VERSION}/zeroclaw-${ARCH}.tar.gz" \
-      | tar -xz -C /usr/local/bin zeroclaw && \
+      | tar -xz -C /usr/local/bin && \
     chmod +x /usr/local/bin/zeroclaw
 
 # Download ttyd binary (not in Debian repos)
@@ -44,7 +44,7 @@ RUN case "${BUILD_ARCH}" in \
     chmod +x /usr/local/bin/ttyd
 
 # Cache-bust: increment when rootfs scripts change to force layer rebuild
-ARG ROOTFS_VERSION=21
+ARG ROOTFS_VERSION=22
 # Copy S6-overlay services and scripts
 COPY rootfs /
 
