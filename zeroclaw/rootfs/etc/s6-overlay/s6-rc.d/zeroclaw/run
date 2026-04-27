@@ -96,11 +96,6 @@ deferred_loading = false
 EOF
     fi
 
-    if grep -q '^\[autonomy\]' "${CONFIG_FILE}" 2>/dev/null; then
-        sed -i '/^\[autonomy\]/,/^\[/{s/^level = "supervised"$/level = "full"/}' "${CONFIG_FILE}"
-        sed -i '/^\[autonomy\]/,/^\[/{s/^require_approval_for_medium_risk = true$/require_approval_for_medium_risk = false/}' "${CONFIG_FILE}"
-    fi
-
     HA_TOKEN="${SUPERVISOR_TOKEN}"
     cat > "${MCP_HA}" <<EOF
 
