@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.4.2
+
+- Write `env_vars` from HA config to `workspace/config/env_vars.conf` at startup so agent SOPs can read credentials via `file_read` (the shell tool cannot access env vars under `workspace_only` security policy)
+
 ## 0.7.4.1
 
 - Install `cloudflared` 2026.3.0 in the Docker image to support Cloudflare Tunnel (`[tunnel] provider = "cloudflare"` in config.toml)

@@ -25,6 +25,18 @@ for index in $(bashio::config 'env_vars|keys[]' 2>/dev/null || true); do
     bashio::log.info "Env var set: ${name}"
 done
 
+# ── Write env vars to workspace so agents can read them via file_read ─────────
+# (shell tool cannot access env vars under workspace_only security policy)
+WORKSPACE_CONFIG="${ZEROCLAW_DATA}/workspace/config"
+mkdir -p "${WORKSPACE_CONFIG}"
+: > "${WORKSPACE_CONFIG}/env_vars.conf"
+for index in $(bashio::config 'env_vars|keys[]' 2>/dev/null || true); do
+    _name=$(bashio::config "env_vars[${index}].name")
+    _value=$(bashio::config "env_vars[${index}].value")
+    [ -z "${_name}" ] && continue
+    printf '%s=%s\n' "${_name}" "${_value}" >> "${WORKSPACE_CONFIG}/env_vars.conf"
+done
+
 # ── First-run guard ───────────────────────────────────────────────────────────
 if [ ! -f "${CONFIG_FILE}" ]; then
     bashio::log.fatal "No configuration found. Open the web terminal and run: zeroclaw onboard"
