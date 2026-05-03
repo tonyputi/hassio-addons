@@ -4,6 +4,7 @@ FROM ${BUILD_FROM}
 ARG BUILD_ARCH
 ARG ZEROCLAW_VERSION="0.7.4"
 ARG AGENT_BROWSER_VERSION="0.25.3"
+ARG CLOUDFLARED_VERSION="2026.3.0"
 
 # Install base dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -31,6 +32,17 @@ RUN case "${BUILD_ARCH}" in \
       "https://github.com/zeroclaw-labs/zeroclaw/releases/download/v${ZEROCLAW_VERSION}/zeroclaw-${ARCH}.tar.gz" \
       | tar -xz -C /usr/local/bin && \
     chmod +x /usr/local/bin/zeroclaw
+
+# Download cloudflared binary (required for Cloudflare Tunnel support)
+RUN case "${BUILD_ARCH}" in \
+      aarch64) CF_ARCH="arm64" ;; \
+      amd64)   CF_ARCH="amd64" ;; \
+      *) echo "Unsupported arch: ${BUILD_ARCH}" && exit 1 ;; \
+    esac && \
+    curl -fsSL \
+      "https://github.com/cloudflare/cloudflared/releases/download/${CLOUDFLARED_VERSION}/cloudflared-linux-${CF_ARCH}" \
+      -o /usr/local/bin/cloudflared && \
+    chmod +x /usr/local/bin/cloudflared
 
 # Download ttyd binary (not in Debian repos)
 RUN case "${BUILD_ARCH}" in \
