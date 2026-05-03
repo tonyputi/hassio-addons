@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.7.4.0
+
+- Update ZeroClaw binary to v0.7.4
+- Onboarding rewrite: schema-driven, idempotent, container-aware URLs for local AI providers
+- New session management tools: SessionResetTool, SessionDeleteTool, SessionsCurrentTool
+- Web dashboard: message deletion, clear-all, compact mode, cron job config UI
+- Runtime fix: self-heal orphaned tool_result blocks on load and compaction
+- Cron fix: prevent memory snowball accumulation in agent jobs
+- New PostgreSQL memory backend
+- Provider fixes: Bedrock omits temperature for Opus 4.7, MiniMax native tool calling enabled
+
 ## 0.6.8.9
 
 - Install system Chromium and point agent-browser/Puppeteer to it via env vars
