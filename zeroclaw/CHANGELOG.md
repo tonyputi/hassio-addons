@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.4.1
+
+- Install `cloudflared` 2026.3.0 in the Docker image to support Cloudflare Tunnel (`[tunnel] provider = "cloudflare"` in config.toml)
+
 ## 0.7.4.0
 
 - Update ZeroClaw binary to v0.7.4
