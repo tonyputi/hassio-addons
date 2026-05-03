@@ -157,6 +157,28 @@ else
     bashio::log.info "No browser addon detected — browser tools unavailable. Install browserless_chrome addon to enable."
 fi
 
+# ── Cloudflare Tunnel ────────────────────────────────────────────────────────
+CF_TOKEN=$(bashio::config 'cloudflare_tunnel_token')
+
+# Remove any previously managed tunnel block before re-injection
+sed -i '/^\[tunnel\]/,/^\[/{ /^\[tunnel\]/d; /^\[tunnel\.cloudflare\]/d; /^provider/d; /^token/d }' "${CONFIG_FILE}" 2>/dev/null || true
+# Clean up any leftover blank lines from the removal
+sed -i '/^$/N;/^\n$/d' "${CONFIG_FILE}" 2>/dev/null || true
+
+if [ -n "${CF_TOKEN}" ]; then
+    cat >> "${CONFIG_FILE}" <<EOF
+
+[tunnel]
+provider = "cloudflare"
+
+[tunnel.cloudflare]
+token = "${CF_TOKEN}"
+EOF
+    bashio::log.info "Cloudflare Tunnel configured."
+else
+    bashio::log.info "Cloudflare Tunnel not configured (token not set)."
+fi
+
 # ── Start daemon ──────────────────────────────────────────────────────────────
 bashio::log.info "Starting ZeroClaw daemon..."
 exec /usr/local/bin/zeroclaw daemon

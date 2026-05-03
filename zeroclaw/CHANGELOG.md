@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.4.1
+
+- Add Cloudflare Tunnel support — set `cloudflare_tunnel_token` in the add-on config to expose the ZeroClaw gateway publicly without port forwarding
+- Install `cloudflared` binary in the Docker image (pinned to 2026.3.0)
+
 ## 0.7.4.0
 
 - Update ZeroClaw binary to v0.7.4
