@@ -169,6 +169,9 @@ else
     bashio::log.info "No browser addon detected — browser tools unavailable. Install browserless_chrome addon to enable."
 fi
 
+# ── Web dashboard path (shipped in the v0.7.5+ tarball) ──────────────────────
+export ZEROCLAW_WEB_DIST_DIR="/opt/zeroclaw/web/dist"
+
 # ── Start daemon ──────────────────────────────────────────────────────────────
 bashio::log.info "Starting ZeroClaw daemon..."
 exec /usr/local/bin/zeroclaw daemon

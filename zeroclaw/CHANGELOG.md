@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.7.5.0
+
+- Update ZeroClaw binary to v0.7.5
+- Ship the prebuilt web dashboard: install path moved to `/opt/zeroclaw/` and `ZEROCLAW_WEB_DIST_DIR=/opt/zeroclaw/web/dist` exported at startup
+- Web onboarding flow at `/onboard` (schema-driven, full first-run UI in the browser)
+- Schema-driven config editor at `/config` with drift detection and per-row diff
+- Personality editor (CodeMirror) for the 7 runtime markdown files (`SOUL.md`, `IDENTITY.md`, `USER.md`, `AGENTS.md`, `TOOLS.md`, `HEARTBEAT.md`, `MEMORY.md`)
+- Live model switching, stop button, manual cron trigger in the dashboard
+- OpenAPI 3.1 spec at `/api/openapi.json`, Scalar explorer at `/api/docs`
+- ACP `session/cancel`, tool-approval back-channel, rejection of concurrent `session/prompt`
+- Per-provider pricing with cost/token usage recorded on every gateway turn
+
 ## 0.7.4.2
 
 - Write `env_vars` from HA config to `workspace/config/env_vars.conf` at startup so agent SOPs can read credentials via `file_read` (the shell tool cannot access env vars under `workspace_only` security policy)
