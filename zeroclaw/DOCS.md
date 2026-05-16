@@ -65,6 +65,68 @@ You can edit workspace files using the Home Assistant **File Editor** add-on or 
 
 After the first start, you can edit `config.toml` directly for options not exposed in the add-on UI. Changes take effect after restarting the add-on.
 
+## Webhook channel (SOP triggers)
+
+ZeroClaw v0.7.5+ ships a dedicated **webhook channel** that exposes an HTTP endpoint for triggering Standard Operating Procedures (SOPs) on demand. This is the canonical way to fire a specific SOP from external systems (Home Assistant automations, Node-RED, cron, curl) without sending a free-form chat message to the main gateway.
+
+### Enable the channel
+
+The channel is opt-in. Add to `/share/zeroclaw/.zeroclaw/config.toml`:
+
+```toml
+[channels.webhook]
+enabled = true
+port = 42618
+listen_path = "/sops"
+# secret = "your-shared-secret"   # optional, HMAC-SHA256 signature verification
+```
+
+Port `42618` is exposed by this add-on. After saving, restart the add-on.
+
+### Define a SOP
+
+SOPs live in `/share/zeroclaw/.zeroclaw/workspace/sops/<name>/`. Each SOP is a directory with two files:
+
+```
+sops/
+  ping/
+    SOP.toml      # metadata + trigger definition
+    SOP.md        # instructions the agent follows when triggered
+```
+
+Declare a webhook trigger in `SOP.toml`:
+
+```toml
+name = "ping"
+description = "Health check SOP — replies with a pong and timestamp"
+
+[trigger]
+type = "webhook"
+```
+
+`SOP.md` contains the prompt the agent receives when the SOP fires:
+
+```markdown
+You were triggered by a webhook. Respond with: "pong" plus the current UTC timestamp.
+Do not call any tool. Keep the response under 50 characters.
+```
+
+### Trigger from outside
+
+```bash
+curl -X POST http://<ha-ip>:42618/sops \
+  -H "Content-Type: application/json" \
+  -d '{}'
+```
+
+The channel routes the incoming POST to the matching SOP and the agent executes `SOP.md` against your configured model.
+
+### Security
+
+- The channel binds on `0.0.0.0:42618` inside the container, which Home Assistant exposes on the host LAN. Anyone on your network can hit it.
+- Set `secret` in `[channels.webhook]` to require an HMAC-SHA256 signature on incoming requests.
+- Do not expose port 42618 to the public internet without authentication.
+
 ## Browser automation
 
 Browser automation is **not available by default**. To enable it, install the **Browserless Chromium** add-on from the [alexbelgium repository](https://github.com/alexbelgium/hassio-addons).
