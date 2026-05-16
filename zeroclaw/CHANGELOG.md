@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.5.1
+
+- Expose port `42618/tcp` for the `[channels.webhook]` channel (HTTP endpoint for SOP triggers). The channel is opt-in: enable and configure it in `config.toml` to start using SOP webhook triggers
+
 ## 0.7.5.0
 
 - Update ZeroClaw binary to v0.7.5
