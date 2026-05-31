@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.5.4
+
+- Fix env_vars injection and `env_vars.conf` accumulating duplicates (observed 32× duplication at runtime). Replace `bashio::config` index iteration with a `jq`-based read of `/data/options.json` using `unique_by(.name)`. Atomic write via tmp file. `env_vars.conf` is chmod `600` since it can contain credentials
+
 ## 0.7.5.3
 
 - Write `gateway.web_dist_dir` into `config.toml` instead of passing it via `ZEROCLAW_WEB_DIST_DIR`. The dashboard's drift check compares in-memory config to on-disk values; the env-var-only path was flagged as "1 path differs from on-disk". Now the path lives in the TOML and the run script keeps it in sync on every boot

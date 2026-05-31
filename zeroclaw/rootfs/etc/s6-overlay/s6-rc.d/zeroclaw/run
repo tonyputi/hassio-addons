@@ -16,26 +16,31 @@ mkdir -p /usr/local/var
 ln -sfn "${ZEROCLAW_DATA}" /usr/local/var/zeroclaw
 
 # ── Inject environment variables from HA UI configuration ────────────────────
-for index in $(bashio::config 'env_vars|keys[]' 2>/dev/null || true); do
-    name=$(bashio::config "env_vars[${index}].name")
-    value=$(bashio::config "env_vars[${index}].value")
-    [ -z "${name}" ] && continue
-    export "${name}=${value}"
-    printf '%s' "${value}" > "/var/run/s6/container_environment/${name}" 2>/dev/null || true
-    bashio::log.info "Env var set: ${name}"
-done
+# Source via jq from /data/options.json (single source of truth, deduped).
+if [ -f /data/options.json ]; then
+    while IFS='=' read -r _name _value; do
+        [ -z "${_name}" ] && continue
+        export "${_name}=${_value}"
+        printf '%s' "${_value}" > "/var/run/s6/container_environment/${_name}" 2>/dev/null || true
+        bashio::log.info "Env var set: ${_name}"
+    done < <(jq -r '(.env_vars // []) | map(select(.name != null and .name != "")) | unique_by(.name) | .[] | "\(.name)=\(.value)"' /data/options.json)
+fi
 
 # ── Write env vars to workspace so agents can read them via file_read ─────────
 # (shell tool cannot access env vars under workspace_only security policy)
+# Build via jq from /data/options.json — single source of truth, no bashio loop
+# (bashio::config iteration was observed duplicating entries 32x at runtime).
 WORKSPACE_CONFIG="${ZEROCLAW_DATA}/workspace/config"
 mkdir -p "${WORKSPACE_CONFIG}"
-: > "${WORKSPACE_CONFIG}/env_vars.conf"
-for index in $(bashio::config 'env_vars|keys[]' 2>/dev/null || true); do
-    _name=$(bashio::config "env_vars[${index}].name")
-    _value=$(bashio::config "env_vars[${index}].value")
-    [ -z "${_name}" ] && continue
-    printf '%s=%s\n' "${_name}" "${_value}" >> "${WORKSPACE_CONFIG}/env_vars.conf"
-done
+ENV_VARS_FILE="${WORKSPACE_CONFIG}/env_vars.conf"
+if [ -f /data/options.json ]; then
+    jq -r '(.env_vars // []) | map(select(.name != null and .name != "")) | unique_by(.name) | .[] | "\(.name)=\(.value)"' \
+        /data/options.json > "${ENV_VARS_FILE}.tmp" && \
+        mv "${ENV_VARS_FILE}.tmp" "${ENV_VARS_FILE}"
+else
+    : > "${ENV_VARS_FILE}"
+fi
+chmod 600 "${ENV_VARS_FILE}"
 
 # ── First-run guard ───────────────────────────────────────────────────────────
 if [ ! -f "${CONFIG_FILE}" ]; then
