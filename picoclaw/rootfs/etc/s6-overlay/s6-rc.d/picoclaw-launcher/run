@@ -59,7 +59,8 @@ if [ -z "${HOST_IP}" ]; then HOST_IP="172.30.32.1"; fi
 BROWSER_CDP_URL="ws://${HOST_IP}:${BROWSER_CDP_PORT}"
 BROWSER_DETECTED=false
 for i in 1 2 3 4 5 6; do
-    if curl -sf "http://${HOST_IP}:${BROWSER_CDP_PORT}/json/version" > /dev/null 2>&1; then
+    if curl -sf -o /dev/null --max-time 3 "http://${HOST_IP}:${BROWSER_CDP_PORT}/sessions" \
+        || curl -sf -o /dev/null --max-time 3 "http://${HOST_IP}:${BROWSER_CDP_PORT}/json/version"; then
         BROWSER_DETECTED=true
         break
     fi

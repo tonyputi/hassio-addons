@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.6.1
+
+- Fix browser addon auto-detection for Browserless Chromium v2.x: the old `/json/version` probe is v1-only and times out on v2. The new probe tries `/sessions` first (v2) with a `/json/version` fallback for v1, both with a 3s timeout per attempt
+
 ## 0.2.4.15
 
 - Fix s6 service registration and finish scripts

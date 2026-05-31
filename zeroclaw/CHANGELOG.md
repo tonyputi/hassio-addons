@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.5.2
+
+- Fix browser addon auto-detection for Browserless Chromium v2.x: the old `/json/version` probe is v1-only and times out on v2. The new probe tries `/sessions` first (v2) with a `/json/version` fallback for v1, both with a 3s timeout per attempt
+
 ## 0.7.5.1
 
 - Expose port `42618/tcp` for the `[channels.webhook]` channel (HTTP endpoint for SOP triggers). The channel is opt-in: enable and configure it in `config.toml` to start using SOP webhook triggers
