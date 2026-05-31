@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.9.0
+
+- Bump PicoClaw to upstream `v0.2.9`: MCP section in config web UI, `pretty_print`/`disable_escape_html` defaults for `tool_feedback`, MQTT channel stop fix, Gemini MCP schema sanitization, agent discovery prompt, delegate tool, Bedrock streaming, network error retry
+
 ## 0.2.6.1
 
 - Fix browser addon auto-detection for Browserless Chromium v2.x: the old `/json/version` probe is v1-only and times out on v2. The new probe tries `/sessions` first (v2) with a `/json/version` fallback for v1, both with a 3s timeout per attempt
