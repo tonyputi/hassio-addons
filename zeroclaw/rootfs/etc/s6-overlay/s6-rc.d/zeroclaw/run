@@ -128,11 +128,17 @@ GATEWAY_PAIRING=$(bashio::config 'gateway_pairing')
 PAIRING_VAL="true"
 if bashio::var.false "${GATEWAY_PAIRING}"; then PAIRING_VAL="false"; fi
 
+WEB_DIST_DIR="/opt/zeroclaw/web/dist"
 if grep -q '^\[gateway\]' "${CONFIG_FILE}" 2>/dev/null; then
     sed -i '/^\[gateway\]/,/^\[/{s/^host = ".*"/host = "0.0.0.0"/}' "${CONFIG_FILE}"
     sed -i '/^\[gateway\]/,/^\[/{s/^port = .*/port = 42617/}' "${CONFIG_FILE}"
     sed -i '/^\[gateway\]/,/^\[/{s/^allow_public_bind = .*$/allow_public_bind = true/}' "${CONFIG_FILE}"
     sed -i '/^\[gateway\]/,/^\[/{s/^require_pairing = .*$/require_pairing = '"${PAIRING_VAL}"'/}' "${CONFIG_FILE}"
+    if awk '/^\[gateway\]/{f=1;next} /^\[/{f=0} f' "${CONFIG_FILE}" | grep -q '^web_dist_dir = '; then
+        sed -i '/^\[gateway\]/,/^\[/{s|^web_dist_dir = .*|web_dist_dir = "'"${WEB_DIST_DIR}"'"|}' "${CONFIG_FILE}"
+    else
+        sed -i '/^\[gateway\]/a web_dist_dir = "'"${WEB_DIST_DIR}"'"' "${CONFIG_FILE}"
+    fi
 else
     cat >> "${CONFIG_FILE}" <<EOF
 
@@ -141,9 +147,10 @@ host = "0.0.0.0"
 port = 42617
 allow_public_bind = true
 require_pairing = ${PAIRING_VAL}
+web_dist_dir = "${WEB_DIST_DIR}"
 EOF
 fi
-bashio::log.info "Gateway configured (port=42617, pairing=${PAIRING_VAL})."
+bashio::log.info "Gateway configured (port=42617, pairing=${PAIRING_VAL}, web_dist_dir=${WEB_DIST_DIR})."
 
 # ── Browser addon auto-detect ─────────────────────────────────────────────────
 BROWSER_CDP_PORT=$(bashio::config 'browser_cdp_port')
@@ -169,9 +176,6 @@ if [ "${BROWSER_DETECTED}" = "true" ]; then
 else
     bashio::log.info "No browser addon detected — browser tools unavailable. Install browserless_chrome addon to enable."
 fi
-
-# ── Web dashboard path (shipped in the v0.7.5+ tarball) ──────────────────────
-export ZEROCLAW_WEB_DIST_DIR="/opt/zeroclaw/web/dist"
 
 # ── Start daemon ──────────────────────────────────────────────────────────────
 bashio::log.info "Starting ZeroClaw daemon..."

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.5.3
+
+- Write `gateway.web_dist_dir` into `config.toml` instead of passing it via `ZEROCLAW_WEB_DIST_DIR`. The dashboard's drift check compares in-memory config to on-disk values; the env-var-only path was flagged as "1 path differs from on-disk". Now the path lives in the TOML and the run script keeps it in sync on every boot
+
 ## 0.7.5.2
 
 - Fix browser addon auto-detection for Browserless Chromium v2.x: the old `/json/version` probe is v1-only and times out on v2. The new probe tries `/sessions` first (v2) with a `/json/version` fallback for v1, both with a 3s timeout per attempt
