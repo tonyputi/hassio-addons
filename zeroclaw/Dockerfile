@@ -2,7 +2,7 @@ ARG BUILD_FROM
 FROM ${BUILD_FROM}
 
 ARG BUILD_ARCH
-ARG ZEROCLAW_VERSION="0.7.5"
+ARG ZEROCLAW_VERSION="0.8.0"
 ARG AGENT_BROWSER_VERSION="0.25.3"
 ARG CLOUDFLARED_VERSION="2026.3.0"
 
@@ -23,8 +23,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN npm install -g agent-browser@${AGENT_BROWSER_VERSION} --omit=dev && npm cache clean --force
 
 # Download and extract ZeroClaw pre-built binary + web/dist (glibc, compatible with Debian base)
-# The v0.7.5 tarball ships the daemon binary alongside a prebuilt web dashboard;
-# extract both into /opt/zeroclaw and symlink the binary into PATH.
+# The v0.8.0 tarball ships the daemon binary, the new `zerocode` terminal UI,
+# and a prebuilt web dashboard; extract everything into /opt/zeroclaw and
+# symlink both binaries into PATH.
 RUN case "${BUILD_ARCH}" in \
       aarch64) ARCH="aarch64-unknown-linux-gnu" ;; \
       amd64)   ARCH="x86_64-unknown-linux-gnu" ;; \
@@ -34,8 +35,9 @@ RUN case "${BUILD_ARCH}" in \
     curl -fsSL \
       "https://github.com/zeroclaw-labs/zeroclaw/releases/download/v${ZEROCLAW_VERSION}/zeroclaw-${ARCH}.tar.gz" \
       | tar -xz -C /opt/zeroclaw && \
-    chmod +x /opt/zeroclaw/zeroclaw && \
-    ln -sf /opt/zeroclaw/zeroclaw /usr/local/bin/zeroclaw
+    chmod +x /opt/zeroclaw/zeroclaw /opt/zeroclaw/zerocode && \
+    ln -sf /opt/zeroclaw/zeroclaw /usr/local/bin/zeroclaw && \
+    ln -sf /opt/zeroclaw/zerocode /usr/local/bin/zerocode
 
 # Download cloudflared binary (required for Cloudflare Tunnel support)
 RUN case "${BUILD_ARCH}" in \
@@ -60,7 +62,7 @@ RUN case "${BUILD_ARCH}" in \
     chmod +x /usr/local/bin/ttyd
 
 # Cache-bust: increment when rootfs scripts change to force layer rebuild
-ARG ROOTFS_VERSION=28
+ARG ROOTFS_VERSION=29
 # Copy S6-overlay services and scripts
 COPY rootfs /
 

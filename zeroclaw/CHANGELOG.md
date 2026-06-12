@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.8.0.0
+
+- **Major upstream release**: bump ZeroClaw binary to v0.8.0. See [upstream release notes](https://github.com/zeroclaw-labs/zeroclaw/releases/tag/v0.8.0) for the full list.
+- **Multi-agent runtime**: a single daemon now runs many named agents, each with its own workspace, memory, model provider, security policy, and channels. Existing single-agent configs are auto-migrated into a `default` agent.
+- **Config schema V3**: V2→V3 migration is committed to disk on first boot via `zeroclaw config migrate` (idempotent). The marker file flips from `.v2_migrated` to `.v3_migrated`. On-disk filesystem layout moves `workspace/` → `agents/default/workspace/` (handled by the daemon on first load).
+- **`zerocode` terminal UI**: new TUI binary bundled in the tarball and symlinked into `PATH`. Launch from the add-on web terminal with `zerocode`.
+- **Install root**: explicit `ZEROCLAW_CONFIG_DIR=/share/zeroclaw/.zeroclaw` is now exported at boot (priority 1 in V3 path resolution); the legacy `/usr/local/var/zeroclaw` symlink is dropped.
+- **`env_vars.conf` path**: moves from `workspace/config/env_vars.conf` to `agents/default/workspace/config/env_vars.conf` to match the per-agent V3 workspace layout. Update any skill that hardcoded the legacy path.
+- **Lean default channel bundle**: the prebuilt linux-gnu binary ships ACP, webhook, email, and Telegram out of the box; other channels (Discord, Slack, Matrix, IRC, WhatsApp, etc.) are now opt-in build features and **not available** in this add-on's binary.
+- **Webhook channel**: rewritten in V3 as `[channels.webhook.<alias>]` (map of named webhooks). The 0.7.x `[channels.webhook]` form is auto-migrated by the daemon; the exposed port `42618/tcp` is unchanged.
+- **Tunnel**: `[tunnel] provider = "..."` is renamed to `[tunnel] tunnel_provider = "..."` in V3 (auto-migrated). `cloudflared` ships unchanged for users who run a Cloudflare Tunnel.
+- **Gateway / MCP TOML shape**: `[gateway]` and top-level `[[mcp.servers]]` are byte-compatible with V3; the add-on's on-boot sed/awk autopatch keeps working unchanged.
+- **Security hardening**: per-agent tool allowlists enforced at every dispatch, bearer-token revocation on device rotation/deletion, private-host allowlists for outbound HTTP, Canvas iframe sandbox tightened (GHSA-f385-f6h2-3gqj).
+
 ## 0.7.5.4
 
 - Fix env_vars injection and `env_vars.conf` accumulating duplicates (observed 32× duplication at runtime). Replace `bashio::config` index iteration with a `jq`-based read of `/data/options.json` using `unique_by(.name)`. Atomic write via tmp file. `env_vars.conf` is chmod `600` since it can contain credentials

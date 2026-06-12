@@ -8,12 +8,15 @@ export SHELL="/bin/bash"
 
 ZEROCLAW_DATA="/share/zeroclaw/.zeroclaw"
 CONFIG_FILE="${ZEROCLAW_DATA}/config.toml"
-mkdir -p "${ZEROCLAW_DATA}" "${HOME}/workspace"
-
-# Redirect ZeroClaw's default internal data dir to the persistent share volume.
-# v0.6.8+ uses /usr/local/var/zeroclaw/ instead of ~/.zeroclaw/ — symlink it.
-mkdir -p /usr/local/var
-ln -sfn "${ZEROCLAW_DATA}" /usr/local/var/zeroclaw
+# v0.8.0+ resolves the install root from ZEROCLAW_CONFIG_DIR (priority 1) —
+# explicit beats relying on HOME/legacy fallbacks. Pre-create the V3 layout:
+# data/ (shared DBs), shared/skills/ (host-wide skills), and the per-agent
+# workspace for the implicit "default" agent created by V2→V3 migration.
+export ZEROCLAW_CONFIG_DIR="${ZEROCLAW_DATA}"
+mkdir -p \
+    "${ZEROCLAW_DATA}/data" \
+    "${ZEROCLAW_DATA}/shared/skills" \
+    "${ZEROCLAW_DATA}/agents/default/workspace"
 
 # ── Inject environment variables from HA UI configuration ────────────────────
 # Source via jq from /data/options.json (single source of truth, deduped).
@@ -30,7 +33,9 @@ fi
 # (shell tool cannot access env vars under workspace_only security policy)
 # Build via jq from /data/options.json — single source of truth, no bashio loop
 # (bashio::config iteration was observed duplicating entries 32x at runtime).
-WORKSPACE_CONFIG="${ZEROCLAW_DATA}/workspace/config"
+# V3 splits the workspace per agent: write under the default agent's workspace,
+# which is where the V2→V3 filesystem migration moves the legacy workspace/.
+WORKSPACE_CONFIG="${ZEROCLAW_DATA}/agents/default/workspace/config"
 mkdir -p "${WORKSPACE_CONFIG}"
 ENV_VARS_FILE="${WORKSPACE_CONFIG}/env_vars.conf"
 if [ -f /data/options.json ]; then
@@ -48,13 +53,17 @@ if [ ! -f "${CONFIG_FILE}" ]; then
     exit 1
 fi
 
-# ── One-time config V2 migration (0.7.0+) ─────────────────────────────────────
-MIGRATED_MARKER="${ZEROCLAW_DATA}/.v2_migrated"
+# ── One-time config V3 migration (0.8.0+) ─────────────────────────────────────
+# V3 daemons auto-migrate in memory on every boot but leave config.toml on disk
+# stale until `zeroclaw config migrate` commits the change. Run it once per
+# install so the on-disk file is locked at schema_version = 3 and downstream
+# tooling that reads the TOML sees the canonical V3 shape. Idempotent.
+MIGRATED_MARKER="${ZEROCLAW_DATA}/.v3_migrated"
 if [ ! -f "${MIGRATED_MARKER}" ]; then
-    bashio::log.info "Running one-time config migration to V2..."
+    bashio::log.info "Running one-time config migration to V3..."
     if /usr/local/bin/zeroclaw config migrate 2>&1; then
         touch "${MIGRATED_MARKER}"
-        bashio::log.info "Config migration to V2 completed."
+        bashio::log.info "Config migration to V3 completed."
     else
         bashio::log.warning "Config migration failed — continuing with existing config."
         touch "${MIGRATED_MARKER}"

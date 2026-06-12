@@ -34,7 +34,7 @@ Every add-on follows this layout:
 - **Base image**: `ghcr.io/home-assistant/{arch}-base-debian:bookworm` for both `aarch64` and `amd64`
 - **ttyd**: always version 1.7.7, downloaded from GitHub releases, port 7681 (ingress)
 - **Persistent data**: `/share/<addon>/` — survives restarts and updates
-- **Config location**: `/share/<addon>/.<addon>/` (e.g. `.zeroclaw/config.toml`, `.nullclaw/config.json`)
+- **Config location**: `/share/<addon>/.<addon>/` (e.g. `.zeroclaw/config.toml`, `.nullclaw/config.json`); ZeroClaw v0.8.0+ also uses `agents/<alias>/workspace/` per agent (default alias = `default`) and `shared/skills/` for host-wide skill bundles
 - **HA options**: `timezone` (str), `ha_mcp_enabled` (bool), `gateway_pairing` (bool) — PicoClaw has no `gateway_pairing`; ZeroClaw/PicoClaw/OpenClaw also have `browser_cdp_port` (int); NullClaw has no browser CDP option
 - **boot**: `auto` on all four
 - **panel_icon**: `mdi:robot` on all four
@@ -49,7 +49,7 @@ Every add-on follows this layout:
 | Install | Binary (Rust, GitHub releases) | Binary (Go, GitHub releases) | `npm install -g openclaw` | Binary (Zig, GitHub releases) |
 | Config format | TOML (`config.toml`) | JSON (`config.json`) | JSON (`openclaw.json`) | JSON (`config.json`) |
 | Gateway port | 42617 | 18800 | 38789 | 43000 |
-| First run | `zeroclaw onboard` | launcher web UI | `openclaw configure` | `nullclaw onboard --interactive` |
+| First run | `zeroclaw onboard` (then `zeroclaw agent -a default` for chat in V3) | launcher web UI | `openclaw configure` | `nullclaw onboard --interactive` |
 | `gateway_pairing` | `require_pairing` in TOML | — (always auth) | `dangerouslyDisableDeviceAuth` in JSON | `require_pairing` in JSON |
 | MCP key | `[[mcp.servers]]` TOML append | `tools.mcp.servers` jq merge | `mcpServers` jq merge | `mcp_servers` jq merge |
 | Browser CDP | `~/.agent-browser/config.json` | `~/.agent-browser/config.json` | `cdpUrl` in openclaw.json | None (uses xdg-open only; no CDP support) |
