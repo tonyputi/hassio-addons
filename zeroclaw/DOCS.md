@@ -1,6 +1,6 @@
 # ZeroClaw Add-on for Home Assistant
 
-ZeroClaw is a lightweight AI daemon with persistent memory, workspace files, cron scheduling, and tool integrations (web search, file operations, HTTP requests, browser automation, and more).
+ZeroClaw is a multi-agent AI daemon with persistent memory, workspace files, cron scheduling, and tool integrations (web search, file operations, HTTP requests, browser automation, and more). A single daemon can run many named agents, each with its own workspace, memory, model provider, security policy, and channels.
 
 This add-on installs ZeroClaw using pre-built binaries — no Rust compilation required. Startup time is under 30 seconds even on Raspberry Pi.
 
@@ -59,11 +59,36 @@ The add-on includes a browser-based terminal (ttyd) accessible from the **ZeroCl
 All ZeroClaw data is stored in `/share/zeroclaw/`:
 
 - `.zeroclaw/config.toml` — generated on first start, then managed via the web dashboard
-- `.zeroclaw/workspace/` — workspace files (SOUL.md, IDENTITY.md, MEMORY.md, TOOLS.md, etc.)
+- `.zeroclaw/agents/default/workspace/` — per-agent workspace (SOUL.md, IDENTITY.md, MEMORY.md, TOOLS.md, …)
+- `.zeroclaw/shared/skills/` — host-wide skill bundles shared across every agent
+- `.zeroclaw/data/` — shared databases (memory, sessions, cost records, secrets)
 
 You can edit workspace files using the Home Assistant **File Editor** add-on or via SSH.
 
 After the first start, you can edit `config.toml` directly for options not exposed in the add-on UI. Changes take effect after restarting the add-on.
+
+## Upgrading from 0.7.x
+
+The first boot on 0.8.0 runs the V2 → V3 migration automatically:
+
+1. `zeroclaw config migrate` rewrites `config.toml` to schema V3 (a `.backup` file is dropped next to the original).
+2. On the next daemon load, `/share/zeroclaw/.zeroclaw/workspace/` is moved into `/share/zeroclaw/.zeroclaw/agents/default/workspace/` and a full pre-split copy is kept under `backup-<timestamp>/`.
+3. The `[channels.webhook]` and `[tunnel] provider` keys are rewritten to V3 form (`[channels.webhook.default]`, `[tunnel] tunnel_provider`) in place.
+
+Take a Home Assistant snapshot before the upgrade. If you have custom skills referencing absolute workspace paths, update them to the new `agents/default/workspace/` location.
+
+## Multi-agent
+
+V3 supports running many agents from one daemon. The 0.7.x single-agent setup is migrated into an agent named `default`. To add another agent, edit `config.toml` and append a block like:
+
+```toml
+[agents.research]
+model_provider = "groq"
+risk_profile = "supervised"
+channels = ["telegram"]
+```
+
+Each agent gets its own `agents/<alias>/workspace/` directory created on first boot. Use `zeroclaw agent -a <alias>` to start an interactive chat with a specific agent.
 
 ## Webhook channel (SOP triggers)
 
@@ -71,21 +96,28 @@ ZeroClaw v0.7.5+ ships a dedicated **webhook channel** that exposes an HTTP endp
 
 ### Enable the channel
 
-The channel is opt-in. Add to `/share/zeroclaw/.zeroclaw/config.toml`:
+The channel is opt-in. In V3 it lives under a named map. Add to `/share/zeroclaw/.zeroclaw/config.toml`:
 
 ```toml
-[channels.webhook]
+[channels.webhook.default]
 enabled = true
 port = 42618
 listen_path = "/sops"
 # secret = "your-shared-secret"   # optional, HMAC-SHA256 signature verification
 ```
 
+Then opt your agent into the channel:
+
+```toml
+[agents.default]
+channels = ["webhook.default"]
+```
+
 Port `42618` is exposed by this add-on. After saving, restart the add-on.
 
 ### Define a SOP
 
-SOPs live in `/share/zeroclaw/.zeroclaw/workspace/sops/<name>/`. Each SOP is a directory with two files:
+SOPs live in `/share/zeroclaw/.zeroclaw/agents/default/workspace/sops/<name>/`. Each SOP is a directory with two files:
 
 ```
 sops/
@@ -124,7 +156,7 @@ The channel routes the incoming POST to the matching SOP and the agent executes 
 ### Security
 
 - The channel binds on `0.0.0.0:42618` inside the container, which Home Assistant exposes on the host LAN. Anyone on your network can hit it.
-- Set `secret` in `[channels.webhook]` to require an HMAC-SHA256 signature on incoming requests.
+- Set `secret` in `[channels.webhook.default]` to require an HMAC-SHA256 signature on incoming requests.
 - Do not expose port 42618 to the public internet without authentication.
 
 ## Browser automation

@@ -13,14 +13,16 @@ cat <<'EOF'
 
 ZeroClaw container shell. Available commands:
 
-  zeroclaw agent          Start interactive chat session
-  zeroclaw status         Show current configuration
-  zeroclaw onboard        Re-run initial setup wizard
-  zeroclaw cron list      List scheduled tasks
-  zeroclaw channel list   List configured channels
-  zeroclaw doctor         Run diagnostics
+  zeroclaw agent -a default   Start interactive chat session (multi-agent: pick alias)
+  zeroclaw status             Show current configuration
+  zeroclaw onboard            Re-run initial setup wizard
+  zeroclaw cron list          List scheduled tasks
+  zeroclaw channel list       List configured channels
+  zeroclaw doctor             Run diagnostics
+  zerocode                    Open the new terminal UI (Chat, Code, Dashboard, Logs)
 
-  Config:  /share/zeroclaw/.zeroclaw/config.toml
-  Workspace: /share/zeroclaw/workspace/
+  Config:    /share/zeroclaw/.zeroclaw/config.toml
+  Workspace: /share/zeroclaw/.zeroclaw/agents/default/workspace/
+  Shared:    /share/zeroclaw/.zeroclaw/shared/skills/
 
 EOF
