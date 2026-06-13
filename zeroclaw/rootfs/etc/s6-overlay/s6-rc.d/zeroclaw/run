@@ -82,27 +82,36 @@ else
     bashio::log.warning "Unknown timezone '${TIMEZONE}', falling back to UTC."
 fi
 
-# ── V2 compat: remove inline "servers = [...]" from [mcp] section ────────────
-# ZeroClaw 0.7.x may rewrite [[mcp.servers]] as inline arrays; we always use the
-# array-of-tables form so we strip any inline definition to avoid duplicate keys.
-sed -i '/^\[mcp\]/,/^\[/{/^servers = \[/d}' "${CONFIG_FILE}"
-
-# ── Remove only the managed home-assistant MCP block before re-injection ───────
-# Uses awk to surgically remove the [[mcp.servers]] block with name = "home-assistant"
-# while leaving all user-defined [[mcp.servers]] entries untouched.
+# ── Strip every managed/broken home-assistant MCP block before re-injection ───
+# We must handle three shapes that may all coexist on upgraded installs:
+#   1. V2 array-of-tables:  [[mcp.servers]] with name = "home-assistant"
+#   2. V3 dotted form:      [mcp.servers.home-assistant] (+ sub-tables)
+#   3. V3 migrator orphan:  [mcp.servers.headers] left over when the buggy
+#      V2→V3 migration drops name/transport/url and only emits the headers
+#      sub-table (see issue #16).
+# A single awk pass buffers each section header + its body and only emits it
+# if it does NOT match one of the three drop patterns. User-defined MCP
+# servers under [mcp.servers.<other>] or [[mcp.servers]] with a different
+# name are preserved.
 MCP_HA="${ZEROCLAW_DATA}/mcp-ha.toml"
 awk '
-BEGIN { in_block=0; ha_block=0; block_buf="" }
+function flush_block() {
+    if (block_buf != "" && !drop_block) printf "%s", block_buf
+    block_buf = ""; drop_block = 0
+}
+BEGIN { block_buf = ""; drop_block = 0; in_aot = 0 }
 /^\[/ {
-    if (block_buf != "" && !ha_block) printf "%s", block_buf
-    block_buf = ""; ha_block = 0
-    if (/^\[\[mcp\.servers\]\]/) { in_block=1; block_buf=$0 "\n" }
-    else { in_block=0; print }
+    flush_block()
+    block_buf = $0 "\n"
+    in_aot = 0
+    if ($0 == "[mcp.servers.headers]") { drop_block = 1; next }
+    if ($0 ~ /^\[mcp\.servers\.home-assistant(\..*)?\]$/) { drop_block = 1; next }
+    if ($0 == "[[mcp.servers]]") { in_aot = 1; next }
     next
 }
-in_block { block_buf=block_buf $0 "\n"; if (/^name = "home-assistant"/) ha_block=1; next }
-{ print }
-END { if (block_buf != "" && !ha_block) printf "%s", block_buf }
+in_aot && /^name = "home-assistant"$/ { drop_block = 1 }
+{ block_buf = block_buf $0 "\n" }
+END { flush_block() }
 ' "${CONFIG_FILE}" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "${CONFIG_FILE}"
 
 # ── Home Assistant MCP integration ────────────────────────────────────────────
@@ -111,7 +120,6 @@ if bashio::var.true "${HA_MCP_ENABLED}"; then
     if grep -q '^\[mcp\]' "${CONFIG_FILE}" 2>/dev/null; then
         sed -i '/^\[mcp\]/,/^\[/{s/^enabled = false$/enabled = true/}' "${CONFIG_FILE}"
         sed -i '/^\[mcp\]/,/^\[/{s/^deferred_loading = true$/deferred_loading = false/}' "${CONFIG_FILE}"
-        sed -i '/^servers = \[\]$/d' "${CONFIG_FILE}"
         bashio::log.info "MCP section updated: enabled = true, deferred_loading = false."
     else
         cat >> "${CONFIG_FILE}" <<EOF
@@ -122,17 +130,21 @@ deferred_loading = false
 EOF
     fi
 
+    # Inject HA MCP server in V3-native dotted form. [[mcp.servers]] (array of
+    # tables) would conflict with any dotted sub-table the migrator may have
+    # left under mcp.servers.* and produces a duplicate-key TOML parse error.
     HA_TOKEN="${SUPERVISOR_TOKEN}"
     cat > "${MCP_HA}" <<EOF
 
-[[mcp.servers]]
-name = "home-assistant"
+[mcp.servers.home-assistant]
 transport = "http"
 url = "http://supervisor/core/api/mcp"
-headers = { Authorization = "Bearer ${HA_TOKEN}" }
+
+[mcp.servers.home-assistant.headers]
+Authorization = "Bearer ${HA_TOKEN}"
 EOF
     cat "${MCP_HA}" >> "${CONFIG_FILE}"
-    bashio::log.info "Home Assistant MCP server configured."
+    bashio::log.info "Home Assistant MCP server configured (V3 dotted form)."
 else
     rm -f "${MCP_HA}"
 fi
