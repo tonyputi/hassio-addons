@@ -130,21 +130,24 @@ deferred_loading = false
 EOF
     fi
 
-    # Inject HA MCP server in V3-native dotted form. [[mcp.servers]] (array of
-    # tables) would conflict with any dotted sub-table the migrator may have
-    # left under mcp.servers.* and produces a duplicate-key TOML parse error.
+    # Inject HA MCP server in array-of-tables form. V3 `#[natural_key = "name"]`
+    # on `Vec<McpServerConfig>` is a dashboard/TUI affordance only — disk
+    # deserialization is still `Vec<McpServerConfig>` and accepts ONLY
+    # `[[mcp.servers]]`. Dotted `[mcp.servers.<name>]` parses as valid TOML
+    # but is silently ignored at load time. The strip awk above already
+    # removed any pre-existing HA entries in either shape (and the migrator
+    # orphan), so re-injecting AOT cannot duplicate-key.
     HA_TOKEN="${SUPERVISOR_TOKEN}"
     cat > "${MCP_HA}" <<EOF
 
-[mcp.servers.home-assistant]
+[[mcp.servers]]
+name = "home-assistant"
 transport = "http"
 url = "http://supervisor/core/api/mcp"
-
-[mcp.servers.home-assistant.headers]
-Authorization = "Bearer ${HA_TOKEN}"
+headers = { Authorization = "Bearer ${HA_TOKEN}" }
 EOF
     cat "${MCP_HA}" >> "${CONFIG_FILE}"
-    bashio::log.info "Home Assistant MCP server configured (V3 dotted form)."
+    bashio::log.info "Home Assistant MCP server configured."
 else
     rm -f "${MCP_HA}"
 fi

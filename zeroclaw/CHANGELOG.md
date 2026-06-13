@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.0.2
+
+- Fix HA MCP not loading after 0.8.0.1. The previous fix wrote `[mcp.servers.home-assistant]` (dotted form), which is syntactically valid TOML but silently ignored by the daemon: V3 `#[natural_key = "name"]` on `Vec<McpServerConfig>` is a dashboard/TUI affordance, not a serde custom deserializer — disk deserialization still requires `[[mcp.servers]]` (array-of-tables). Revert the inject to AOT. The strip-three-shapes awk already prevents duplicate-key conflicts with the migrator orphan, so AOT re-injection is safe.
+
 ## 0.8.0.1
 
 - Fix daemon crash-loop (`Config contains malformed security-critical sections (<entire-config>)`) after the 0.7.5.4 → 0.8.0.0 upgrade. Upstream's V2→V3 migrator emits a `[mcp.servers.headers]` orphan dotted sub-table from any V2 `[[mcp.servers]]` whose `headers` field is an inline-table, dropping `name`/`transport`/`url`. The run script then appended `[[mcp.servers]]` for HA MCP, declaring `mcp.servers` as both a table and an array → duplicate-key TOML parse error.
