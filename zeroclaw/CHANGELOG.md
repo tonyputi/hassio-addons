@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.0.1
+
+- Fix daemon crash-loop (`Config contains malformed security-critical sections (<entire-config>)`) after the 0.7.5.4 → 0.8.0.0 upgrade. Upstream's V2→V3 migrator emits a `[mcp.servers.headers]` orphan dotted sub-table from any V2 `[[mcp.servers]]` whose `headers` field is an inline-table, dropping `name`/`transport`/`url`. The run script then appended `[[mcp.servers]]` for HA MCP, declaring `mcp.servers` as both a table and an array → duplicate-key TOML parse error.
+- Run script now strips three shapes before re-injecting HA MCP: V2 `[[mcp.servers]]` with `name = "home-assistant"`, V3 dotted `[mcp.servers.home-assistant]` plus its sub-tables, and the migrator orphan `[mcp.servers.headers]`. User-defined MCP entries (other names, other forms) are preserved.
+- HA MCP is now injected in V3-native dotted form (`[mcp.servers.home-assistant]` + `[mcp.servers.home-assistant.headers]`) to coexist cleanly with anything else the daemon writes under `mcp.servers.*`.
+
 ## 0.8.0.0
 
 - **Major upstream release**: bump ZeroClaw binary to v0.8.0. See [upstream release notes](https://github.com/zeroclaw-labs/zeroclaw/releases/tag/v0.8.0) for the full list.
