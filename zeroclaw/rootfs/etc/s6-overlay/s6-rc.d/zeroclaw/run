@@ -197,7 +197,7 @@ fi
 # would refuse to serve with the cryptic "malformed security-critical sections
 # (<entire-config>)" message and we'd see a crash-loop instead of a clear
 # error. Backup is dropped beside the live file so the operator can restore.
-if ! /usr/local/bin/zeroclaw config list >/dev/null 2>&1; then
+if ! /usr/local/bin/zeroclaw --config-dir "${ZEROCLAW_DATA}" config list >/dev/null 2>&1; then
     cp -a "${CONFIG_FILE}" "${CONFIG_FILE}.invalid-$(date -u +%Y%m%dT%H%M%SZ)" || true
     bashio::log.fatal "Config validation failed after sanitize/inject. \
 A copy of the invalid file was saved next to ${CONFIG_FILE} (suffix '.invalid-*'). \
@@ -208,5 +208,13 @@ fi
 bashio::log.info "Config validation passed."
 
 # ── Phase G: Start daemon ─────────────────────────────────────────────────────
+# Pass --config-dir explicitly. The `export ZEROCLAW_CONFIG_DIR=...` above
+# does not survive `exec` on this s6-overlay/Docker combination (HOME gets
+# reset to /root and ZEROCLAW_CONFIG_DIR is dropped), which makes the daemon
+# fall back to `${HOME}/.zeroclaw/` for `install_root_dir()` — gateway
+# personality endpoints then look up SOUL.md/AGENTS.md in container-ephemeral
+# paths instead of /share/zeroclaw/.zeroclaw/agents/<alias>/workspace/.
+# `--config-dir` is a global CLI flag honored before any config resolution
+# runs, so it's the single source of truth (see issue #22).
 bashio::log.info "Starting ZeroClaw daemon..."
-exec /usr/local/bin/zeroclaw daemon
+exec /usr/local/bin/zeroclaw --config-dir "${ZEROCLAW_DATA}" daemon
