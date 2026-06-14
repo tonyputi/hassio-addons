@@ -62,7 +62,7 @@ RUN case "${BUILD_ARCH}" in \
     chmod +x /usr/local/bin/ttyd
 
 # Cache-bust: increment when rootfs scripts change to force layer rebuild
-ARG ROOTFS_VERSION=31
+ARG ROOTFS_VERSION=32
 # Copy S6-overlay services and scripts
 COPY rootfs /
 

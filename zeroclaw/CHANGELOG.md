@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.0.3
+
+- Refactor the boot run script to a "V3-first" pipeline: the upstream V2→V3 migrator is treated as a best-effort transform whose output is never trusted as final, and the daemon never sees a config we haven't sanitised. The flow becomes Phase A migrate (one-time) → Phase B read HA options → Phase C V3 sanitize (unconditional) → Phase D gateway → Phase E HA MCP inject (conditional) → Phase F browser auto-detect → Phase G validation → Phase H daemon.
+- V3 sanitize is now **unconditional**: it runs every boot regardless of `ha_mcp_enabled`. Previously the strip-three-shapes awk lived inside the MCP injection block, so toggling MCP off left migrator orphans (`[mcp.servers.headers]`) accumulating in the file. Now they get cleared every restart.
+- Add a validation phase before launching the daemon: `zeroclaw config list >/dev/null` loads + parses + deserialises the whole schema. On failure the run script saves `config.toml.invalid-<timestamp>` next to the live file and aborts with a `bashio::log.fatal` pointing at the issue — instead of leaving the daemon to crash-loop with a cryptic "malformed security-critical sections (<entire-config>)".
+
 ## 0.8.0.2
 
 - Fix HA MCP not loading after 0.8.0.1. The previous fix wrote `[mcp.servers.home-assistant]` (dotted form), which is syntactically valid TOML but silently ignored by the daemon: V3 `#[natural_key = "name"]` on `Vec<McpServerConfig>` is a dashboard/TUI affordance, not a serde custom deserializer — disk deserialization still requires `[[mcp.servers]]` (array-of-tables). Revert the inject to AOT. The strip-three-shapes awk already prevents duplicate-key conflicts with the migrator orphan, so AOT re-injection is safe.
