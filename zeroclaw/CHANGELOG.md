@@ -2,8 +2,9 @@
 
 ## 0.8.0.3
 
-- Refactor the boot run script to a "V3-first" pipeline: the upstream V2→V3 migrator is treated as a best-effort transform whose output is never trusted as final, and the daemon never sees a config we haven't sanitised. The flow becomes Phase A migrate (one-time) → Phase B read HA options → Phase C V3 sanitize (unconditional) → Phase D gateway → Phase E HA MCP inject (conditional) → Phase F browser auto-detect → Phase G validation → Phase H daemon.
-- V3 sanitize is now **unconditional**: it runs every boot regardless of `ha_mcp_enabled`. Previously the strip-three-shapes awk lived inside the MCP injection block, so toggling MCP off left migrator orphans (`[mcp.servers.headers]`) accumulating in the file. Now they get cleared every restart.
+- **V3-only**: drop all V2 retrocompat from the boot run script. Schema migration (`zeroclaw config migrate` + `.v3_migrated` marker) is gone, along with the sanitize patterns and `[mcp]` sed fallbacks that only mattered on configs upgraded from ZeroClaw 0.7.x. Users still on V2 must run `zeroclaw config migrate` manually from the web terminal before installing this add-on version.
+- Boot pipeline collapses to seven explicit phases (A read options → B V3 sanitize → C gateway → D HA MCP inject → E browser detect → F validation → G daemon).
+- V3 sanitize is now **unconditional and minimal**: a single awk pass drops the previous boot's `[[mcp.servers]]` with `name = "home-assistant"` so Phase D can re-inject it idempotently with a fresh Supervisor token. Runs regardless of `ha_mcp_enabled`.
 - Add a validation phase before launching the daemon: `zeroclaw config list >/dev/null` loads + parses + deserialises the whole schema. On failure the run script saves `config.toml.invalid-<timestamp>` next to the live file and aborts with a `bashio::log.fatal` pointing at the issue — instead of leaving the daemon to crash-loop with a cryptic "malformed security-critical sections (<entire-config>)".
 
 ## 0.8.0.2

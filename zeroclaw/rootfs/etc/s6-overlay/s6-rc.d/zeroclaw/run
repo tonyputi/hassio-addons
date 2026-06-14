@@ -53,43 +53,23 @@ if [ ! -f "${CONFIG_FILE}" ]; then
     exit 1
 fi
 
-# ── V3-first philosophy ──────────────────────────────────────────────────────
-# We do NOT trust the upstream V2→V3 migrator's output to be correct (the
-# 0.8.0 migrator emits a `[mcp.servers.headers]` orphan that the same V3
-# deserializer then refuses to read — see issue #16). Our run script owns
-# the final shape of the on-disk config and the daemon never sees a file
-# we haven't sanitised. The flow per boot is:
+# ── V3-only ──────────────────────────────────────────────────────────────────
+# This add-on supports schema_version = 3 only. Upgrades from V2 (ZeroClaw
+# 0.7.x) are not handled here: run `zeroclaw config migrate` from the web
+# terminal once before installing 0.8.x. We don't trust the upstream migrator
+# enough to wrap it — see issues #16/#18 for why.
 #
-#   Phase A — one-time `zeroclaw config migrate` (best-effort transform)
-#   Phase B — read HA add-on options (timezone, ha_mcp_enabled, …)
-#   Phase C — V3 sanitize: strip known migrator orphans and any managed
-#             sections that Phase D/E will re-inject. UNCONDITIONAL.
-#   Phase D — Gateway settings (always)
-#   Phase E — Home Assistant MCP server (only if ha_mcp_enabled = true)
-#   Phase F — Browser CDP auto-detect (always)
-#   Phase G — Validation via `zeroclaw config list` — fail fast on bad TOML
-#             instead of a cryptic daemon crash-loop downstream.
-#   Phase H — exec the daemon.
+# Boot pipeline:
+#   A — read HA add-on options
+#   B — V3 sanitize: drop the managed [[mcp.servers]] entry so Phase D can
+#       re-inject it idempotently with a fresh Supervisor token
+#   C — Gateway settings (always)
+#   D — Home Assistant MCP inject (only if ha_mcp_enabled = true)
+#   E — Browser CDP auto-detect (always)
+#   F — Validation via `zeroclaw config list` — fail fast on bad TOML
+#   G — exec the daemon
 
-# ── Phase A: one-time V3 migration ────────────────────────────────────────────
-# V3 daemons auto-migrate in memory on every boot but leave config.toml on disk
-# stale until `zeroclaw config migrate` commits the change. Run it once per
-# install so the on-disk file is locked at schema_version = 3. Idempotent. The
-# migrator is best-effort — Phase C runs unconditionally afterwards to repair
-# any orphans the migrator leaves behind.
-MIGRATED_MARKER="${ZEROCLAW_DATA}/.v3_migrated"
-if [ ! -f "${MIGRATED_MARKER}" ]; then
-    bashio::log.info "Running one-time config migration to V3..."
-    if /usr/local/bin/zeroclaw config migrate 2>&1; then
-        touch "${MIGRATED_MARKER}"
-        bashio::log.info "Config migration to V3 completed."
-    else
-        bashio::log.warning "Config migration failed — continuing with existing config."
-        touch "${MIGRATED_MARKER}"
-    fi
-fi
-
-# ── Phase B: read HA add-on options ───────────────────────────────────────────
+# ── Phase A: read HA add-on options ───────────────────────────────────────────
 TIMEZONE=$(bashio::config 'timezone')
 HA_MCP_ENABLED=$(bashio::config 'ha_mcp_enabled')
 GATEWAY_PAIRING=$(bashio::config 'gateway_pairing')
@@ -103,21 +83,12 @@ else
     bashio::log.warning "Unknown timezone '${TIMEZONE}', falling back to UTC."
 fi
 
-# ── Phase C: V3 sanitize (UNCONDITIONAL) ──────────────────────────────────────
-# Repair known migrator damage and clear any managed section the inject phases
-# below will re-write. Runs every boot regardless of feature flags so orphans
-# don't accumulate when HA MCP is toggled off and back on.
-#
-# Three drop patterns for `mcp.servers`, all coexisting on upgraded installs:
-#   1. [mcp.servers.headers]                — V2→V3 migrator orphan (#16);
-#      always invalid, never owned by a user (real servers go under a name)
-#   2. [mcp.servers.home-assistant] + subs  — V3 dotted form for OUR managed
-#      server. Silently ignored by the V3 deserializer (#18), so any copy on
-#      disk is dead weight. Strip so Phase E can re-inject as AOT.
-#   3. [[mcp.servers]] with name="home-assistant" — V2 AOT form for OUR
-#      managed server. Strip so Phase E can re-inject with a fresh token.
-#
-# User-defined entries under any other name in either shape are preserved.
+# ── Phase B: V3 sanitize ──────────────────────────────────────────────────────
+# Drop the previous boot's managed home-assistant entry so Phase D can re-inject
+# it cleanly with the current Supervisor token. AOT (`[[mcp.servers]]`) is the
+# only shape the V3 deserializer reads from disk, so that's the only one we
+# write and the only one we strip. User-defined entries under any other name
+# are preserved.
 MCP_HA="${ZEROCLAW_DATA}/mcp-ha.toml"
 awk '
 function flush_block() {
@@ -128,19 +99,15 @@ BEGIN { block_buf = ""; drop_block = 0; in_aot = 0 }
 /^\[/ {
     flush_block()
     block_buf = $0 "\n"
-    in_aot = 0
-    if ($0 == "[mcp.servers.headers]") { drop_block = 1; next }
-    if ($0 ~ /^\[mcp\.servers\.home-assistant(\..*)?\]$/) { drop_block = 1; next }
-    if ($0 == "[[mcp.servers]]") { in_aot = 1; next }
+    in_aot = ($0 == "[[mcp.servers]]")
     next
 }
 in_aot && /^name = "home-assistant"$/ { drop_block = 1 }
 { block_buf = block_buf $0 "\n" }
 END { flush_block() }
 ' "${CONFIG_FILE}" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "${CONFIG_FILE}"
-bashio::log.info "V3 sanitize: managed mcp.servers entries cleared."
 
-# ── Phase D: Gateway settings ─────────────────────────────────────────────────
+# ── Phase C: Gateway settings ─────────────────────────────────────────────────
 PAIRING_VAL="true"
 if bashio::var.false "${GATEWAY_PAIRING}"; then PAIRING_VAL="false"; fi
 
@@ -166,19 +133,15 @@ require_pairing = ${PAIRING_VAL}
 web_dist_dir = "${WEB_DIST_DIR}"
 EOF
 fi
-bashio::log.info "Gateway configured (port=42617, pairing=${PAIRING_VAL}, web_dist_dir=${WEB_DIST_DIR})."
+bashio::log.info "Gateway configured (port=42617, pairing=${PAIRING_VAL})."
 
-# ── Phase E: Home Assistant MCP integration ───────────────────────────────────
-# Phase C already cleared every managed mcp.servers entry. We now (a) make sure
-# the top-level [mcp] block exists with enabled=true / deferred_loading=false
-# and (b) inject the HA server as [[mcp.servers]] (array-of-tables) — the only
-# shape the V3 deserializer actually reads from disk.
+# ── Phase D: Home Assistant MCP inject ────────────────────────────────────────
+# V3 defaults `[mcp]` to enabled=true / deferred_loading=false, so we only
+# append the section if the user hasn't already declared it. Then attach the
+# managed server entry. AOT form: the V3 deserializer only loads
+# `[[mcp.servers]]`, never dotted.
 if bashio::var.true "${HA_MCP_ENABLED}"; then
-    if grep -q '^\[mcp\]' "${CONFIG_FILE}" 2>/dev/null; then
-        sed -i '/^\[mcp\]/,/^\[/{s/^enabled = false$/enabled = true/}' "${CONFIG_FILE}"
-        sed -i '/^\[mcp\]/,/^\[/{s/^deferred_loading = true$/deferred_loading = false/}' "${CONFIG_FILE}"
-        bashio::log.info "MCP section updated: enabled = true, deferred_loading = false."
-    else
+    if ! grep -q '^\[mcp\]' "${CONFIG_FILE}"; then
         cat >> "${CONFIG_FILE}" <<EOF
 
 [mcp]
@@ -202,7 +165,7 @@ else
     rm -f "${MCP_HA}"
 fi
 
-# ── Phase F: Browser addon auto-detect ────────────────────────────────────────
+# ── Phase E: Browser addon auto-detect ────────────────────────────────────────
 HOST_IP=""
 if command -v ip > /dev/null 2>&1; then
     HOST_IP=$(ip route show default 2>/dev/null | awk '/default/ {print $3; exit}') || true
@@ -226,7 +189,7 @@ else
     bashio::log.info "No browser addon detected — browser tools unavailable. Install browserless_chrome addon to enable."
 fi
 
-# ── Phase G: Validation ───────────────────────────────────────────────────────
+# ── Phase F: Validation ───────────────────────────────────────────────────────
 # `zeroclaw config list` loads, parses, and deserializes the entire schema.
 # If the file is broken (orphan stripping went wrong, an inject produced an
 # invalid shape, a hand-edit left dangling syntax), this command exits non-zero
@@ -244,6 +207,6 @@ then restart the add-on."
 fi
 bashio::log.info "Config validation passed."
 
-# ── Phase H: Start daemon ─────────────────────────────────────────────────────
+# ── Phase G: Start daemon ─────────────────────────────────────────────────────
 bashio::log.info "Starting ZeroClaw daemon..."
 exec /usr/local/bin/zeroclaw daemon
