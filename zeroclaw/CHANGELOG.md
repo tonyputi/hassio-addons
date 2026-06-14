@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8.0.3
+
+- **V3-only**: drop all V2 retrocompat from the boot run script. Schema migration (`zeroclaw config migrate` + `.v3_migrated` marker) is gone, along with the sanitize patterns and `[mcp]` sed fallbacks that only mattered on configs upgraded from ZeroClaw 0.7.x. Users still on V2 must run `zeroclaw config migrate` manually from the web terminal before installing this add-on version.
+- Boot pipeline collapses to seven explicit phases (A read options → B V3 sanitize → C gateway → D HA MCP inject → E browser detect → F validation → G daemon).
+- V3 sanitize is now **unconditional and minimal**: a single awk pass drops the previous boot's `[[mcp.servers]]` with `name = "home-assistant"` so Phase D can re-inject it idempotently with a fresh Supervisor token. Runs regardless of `ha_mcp_enabled`.
+- Add a validation phase before launching the daemon: `zeroclaw config list >/dev/null` loads + parses + deserialises the whole schema. On failure the run script saves `config.toml.invalid-<timestamp>` next to the live file and aborts with a `bashio::log.fatal` pointing at the issue — instead of leaving the daemon to crash-loop with a cryptic "malformed security-critical sections (<entire-config>)".
+
 ## 0.8.0.2
 
 - Fix HA MCP not loading after 0.8.0.1. The previous fix wrote `[mcp.servers.home-assistant]` (dotted form), which is syntactically valid TOML but silently ignored by the daemon: V3 `#[natural_key = "name"]` on `Vec<McpServerConfig>` is a dashboard/TUI affordance, not a serde custom deserializer — disk deserialization still requires `[[mcp.servers]]` (array-of-tables). Revert the inject to AOT. The strip-three-shapes awk already prevents duplicate-key conflicts with the migrator orphan, so AOT re-injection is safe.

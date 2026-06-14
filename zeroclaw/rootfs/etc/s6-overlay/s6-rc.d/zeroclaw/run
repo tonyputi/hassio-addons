@@ -53,27 +53,28 @@ if [ ! -f "${CONFIG_FILE}" ]; then
     exit 1
 fi
 
-# ── One-time config V3 migration (0.8.0+) ─────────────────────────────────────
-# V3 daemons auto-migrate in memory on every boot but leave config.toml on disk
-# stale until `zeroclaw config migrate` commits the change. Run it once per
-# install so the on-disk file is locked at schema_version = 3 and downstream
-# tooling that reads the TOML sees the canonical V3 shape. Idempotent.
-MIGRATED_MARKER="${ZEROCLAW_DATA}/.v3_migrated"
-if [ ! -f "${MIGRATED_MARKER}" ]; then
-    bashio::log.info "Running one-time config migration to V3..."
-    if /usr/local/bin/zeroclaw config migrate 2>&1; then
-        touch "${MIGRATED_MARKER}"
-        bashio::log.info "Config migration to V3 completed."
-    else
-        bashio::log.warning "Config migration failed — continuing with existing config."
-        touch "${MIGRATED_MARKER}"
-    fi
-fi
+# ── V3-only ──────────────────────────────────────────────────────────────────
+# This add-on supports schema_version = 3 only. Upgrades from V2 (ZeroClaw
+# 0.7.x) are not handled here: run `zeroclaw config migrate` from the web
+# terminal once before installing 0.8.x. We don't trust the upstream migrator
+# enough to wrap it — see issues #16/#18 for why.
+#
+# Boot pipeline:
+#   A — read HA add-on options
+#   B — V3 sanitize: drop the managed [[mcp.servers]] entry so Phase D can
+#       re-inject it idempotently with a fresh Supervisor token
+#   C — Gateway settings (always)
+#   D — Home Assistant MCP inject (only if ha_mcp_enabled = true)
+#   E — Browser CDP auto-detect (always)
+#   F — Validation via `zeroclaw config list` — fail fast on bad TOML
+#   G — exec the daemon
 
-# ── Read options ──────────────────────────────────────────────────────────────
+# ── Phase A: read HA add-on options ───────────────────────────────────────────
 TIMEZONE=$(bashio::config 'timezone')
+HA_MCP_ENABLED=$(bashio::config 'ha_mcp_enabled')
+GATEWAY_PAIRING=$(bashio::config 'gateway_pairing')
+BROWSER_CDP_PORT=$(bashio::config 'browser_cdp_port')
 
-# ── Timezone ──────────────────────────────────────────────────────────────────
 if [ -f "/usr/share/zoneinfo/${TIMEZONE}" ]; then
     ln -sf "/usr/share/zoneinfo/${TIMEZONE}" /etc/localtime
     echo "${TIMEZONE}" > /etc/timezone
@@ -82,17 +83,12 @@ else
     bashio::log.warning "Unknown timezone '${TIMEZONE}', falling back to UTC."
 fi
 
-# ── Strip every managed/broken home-assistant MCP block before re-injection ───
-# We must handle three shapes that may all coexist on upgraded installs:
-#   1. V2 array-of-tables:  [[mcp.servers]] with name = "home-assistant"
-#   2. V3 dotted form:      [mcp.servers.home-assistant] (+ sub-tables)
-#   3. V3 migrator orphan:  [mcp.servers.headers] left over when the buggy
-#      V2→V3 migration drops name/transport/url and only emits the headers
-#      sub-table (see issue #16).
-# A single awk pass buffers each section header + its body and only emits it
-# if it does NOT match one of the three drop patterns. User-defined MCP
-# servers under [mcp.servers.<other>] or [[mcp.servers]] with a different
-# name are preserved.
+# ── Phase B: V3 sanitize ──────────────────────────────────────────────────────
+# Drop the previous boot's managed home-assistant entry so Phase D can re-inject
+# it cleanly with the current Supervisor token. AOT (`[[mcp.servers]]`) is the
+# only shape the V3 deserializer reads from disk, so that's the only one we
+# write and the only one we strip. User-defined entries under any other name
+# are preserved.
 MCP_HA="${ZEROCLAW_DATA}/mcp-ha.toml"
 awk '
 function flush_block() {
@@ -103,10 +99,7 @@ BEGIN { block_buf = ""; drop_block = 0; in_aot = 0 }
 /^\[/ {
     flush_block()
     block_buf = $0 "\n"
-    in_aot = 0
-    if ($0 == "[mcp.servers.headers]") { drop_block = 1; next }
-    if ($0 ~ /^\[mcp\.servers\.home-assistant(\..*)?\]$/) { drop_block = 1; next }
-    if ($0 == "[[mcp.servers]]") { in_aot = 1; next }
+    in_aot = ($0 == "[[mcp.servers]]")
     next
 }
 in_aot && /^name = "home-assistant"$/ { drop_block = 1 }
@@ -114,46 +107,7 @@ in_aot && /^name = "home-assistant"$/ { drop_block = 1 }
 END { flush_block() }
 ' "${CONFIG_FILE}" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "${CONFIG_FILE}"
 
-# ── Home Assistant MCP integration ────────────────────────────────────────────
-HA_MCP_ENABLED=$(bashio::config 'ha_mcp_enabled')
-if bashio::var.true "${HA_MCP_ENABLED}"; then
-    if grep -q '^\[mcp\]' "${CONFIG_FILE}" 2>/dev/null; then
-        sed -i '/^\[mcp\]/,/^\[/{s/^enabled = false$/enabled = true/}' "${CONFIG_FILE}"
-        sed -i '/^\[mcp\]/,/^\[/{s/^deferred_loading = true$/deferred_loading = false/}' "${CONFIG_FILE}"
-        bashio::log.info "MCP section updated: enabled = true, deferred_loading = false."
-    else
-        cat >> "${CONFIG_FILE}" <<EOF
-
-[mcp]
-enabled = true
-deferred_loading = false
-EOF
-    fi
-
-    # Inject HA MCP server in array-of-tables form. V3 `#[natural_key = "name"]`
-    # on `Vec<McpServerConfig>` is a dashboard/TUI affordance only — disk
-    # deserialization is still `Vec<McpServerConfig>` and accepts ONLY
-    # `[[mcp.servers]]`. Dotted `[mcp.servers.<name>]` parses as valid TOML
-    # but is silently ignored at load time. The strip awk above already
-    # removed any pre-existing HA entries in either shape (and the migrator
-    # orphan), so re-injecting AOT cannot duplicate-key.
-    HA_TOKEN="${SUPERVISOR_TOKEN}"
-    cat > "${MCP_HA}" <<EOF
-
-[[mcp.servers]]
-name = "home-assistant"
-transport = "http"
-url = "http://supervisor/core/api/mcp"
-headers = { Authorization = "Bearer ${HA_TOKEN}" }
-EOF
-    cat "${MCP_HA}" >> "${CONFIG_FILE}"
-    bashio::log.info "Home Assistant MCP server configured."
-else
-    rm -f "${MCP_HA}"
-fi
-
-# ── Gateway: bind to 0.0.0.0 for direct port access ──────────────────────────
-GATEWAY_PAIRING=$(bashio::config 'gateway_pairing')
+# ── Phase C: Gateway settings ─────────────────────────────────────────────────
 PAIRING_VAL="true"
 if bashio::var.false "${GATEWAY_PAIRING}"; then PAIRING_VAL="false"; fi
 
@@ -179,10 +133,39 @@ require_pairing = ${PAIRING_VAL}
 web_dist_dir = "${WEB_DIST_DIR}"
 EOF
 fi
-bashio::log.info "Gateway configured (port=42617, pairing=${PAIRING_VAL}, web_dist_dir=${WEB_DIST_DIR})."
+bashio::log.info "Gateway configured (port=42617, pairing=${PAIRING_VAL})."
 
-# ── Browser addon auto-detect ─────────────────────────────────────────────────
-BROWSER_CDP_PORT=$(bashio::config 'browser_cdp_port')
+# ── Phase D: Home Assistant MCP inject ────────────────────────────────────────
+# V3 defaults `[mcp]` to enabled=true / deferred_loading=false, so we only
+# append the section if the user hasn't already declared it. Then attach the
+# managed server entry. AOT form: the V3 deserializer only loads
+# `[[mcp.servers]]`, never dotted.
+if bashio::var.true "${HA_MCP_ENABLED}"; then
+    if ! grep -q '^\[mcp\]' "${CONFIG_FILE}"; then
+        cat >> "${CONFIG_FILE}" <<EOF
+
+[mcp]
+enabled = true
+deferred_loading = false
+EOF
+    fi
+
+    HA_TOKEN="${SUPERVISOR_TOKEN}"
+    cat > "${MCP_HA}" <<EOF
+
+[[mcp.servers]]
+name = "home-assistant"
+transport = "http"
+url = "http://supervisor/core/api/mcp"
+headers = { Authorization = "Bearer ${HA_TOKEN}" }
+EOF
+    cat "${MCP_HA}" >> "${CONFIG_FILE}"
+    bashio::log.info "Home Assistant MCP server configured."
+else
+    rm -f "${MCP_HA}"
+fi
+
+# ── Phase E: Browser addon auto-detect ────────────────────────────────────────
 HOST_IP=""
 if command -v ip > /dev/null 2>&1; then
     HOST_IP=$(ip route show default 2>/dev/null | awk '/default/ {print $3; exit}') || true
@@ -206,6 +189,24 @@ else
     bashio::log.info "No browser addon detected — browser tools unavailable. Install browserless_chrome addon to enable."
 fi
 
-# ── Start daemon ──────────────────────────────────────────────────────────────
+# ── Phase F: Validation ───────────────────────────────────────────────────────
+# `zeroclaw config list` loads, parses, and deserializes the entire schema.
+# If the file is broken (orphan stripping went wrong, an inject produced an
+# invalid shape, a hand-edit left dangling syntax), this command exits non-zero
+# and we fail loudly with a pointer to the file. Without this gate the daemon
+# would refuse to serve with the cryptic "malformed security-critical sections
+# (<entire-config>)" message and we'd see a crash-loop instead of a clear
+# error. Backup is dropped beside the live file so the operator can restore.
+if ! /usr/local/bin/zeroclaw config list >/dev/null 2>&1; then
+    cp -a "${CONFIG_FILE}" "${CONFIG_FILE}.invalid-$(date -u +%Y%m%dT%H%M%SZ)" || true
+    bashio::log.fatal "Config validation failed after sanitize/inject. \
+A copy of the invalid file was saved next to ${CONFIG_FILE} (suffix '.invalid-*'). \
+Run \`zeroclaw config migrate\` from the web terminal to inspect the precise error, \
+then restart the add-on."
+    exit 1
+fi
+bashio::log.info "Config validation passed."
+
+# ── Phase G: Start daemon ─────────────────────────────────────────────────────
 bashio::log.info "Starting ZeroClaw daemon..."
 exec /usr/local/bin/zeroclaw daemon
