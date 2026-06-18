@@ -1,5 +1,5 @@
 name: "ZeroClaw"
-version: "0.8.0.4"
+version: "0.8.0.5"
 slug: "zeroclaw"
 description: "Lightweight AI daemon with persistent memory, tools, cron scheduling, and messaging integrations"
 url: "https://www.zeroclawlabs.ai"
@@ -15,6 +15,7 @@ options:
   ha_mcp_enabled: false
   gateway_pairing: true
   browser_cdp_port: 3000
+  browser_stealth: true
   env_vars: []
 
 schema:
@@ -22,6 +23,7 @@ schema:
   ha_mcp_enabled: bool
   gateway_pairing: bool
   browser_cdp_port: int
+  browser_stealth: bool
   env_vars:
     - name: str
       value: str

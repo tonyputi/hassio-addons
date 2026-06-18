@@ -60,6 +60,12 @@ Once installed and running, PicoClaw automatically detects it at boot and config
 
 Without the browser add-on, all other tools (web search, memory, MCP, scheduling) continue to work normally.
 
+### Stealth mode
+
+The `browser_stealth` option (default `true`) appends `?stealth=true` to the CDP URL written to `~/.agent-browser/config.json`. Browserless v2 reads this query parameter on every WebSocket connection and launches the browser through `puppeteer-extra` with `puppeteer-extra-plugin-stealth` attached, which patches `navigator.webdriver`, `navigator.plugins`, `navigator.languages`, the WebGL/Canvas fingerprint, and the `chrome.runtime` object. Without stealth, headless Chrome is trivially detectable client-side and many login flows refuse to proceed.
+
+Leave it enabled by default. Disable it only if you observe a specific site breaking under stealth.
+
 ## Web terminal
 
 The add-on includes a web-based terminal accessible via the sidebar panel (ingress). From the terminal you can inspect PicoClaw files, run `picoclaw` CLI commands, or edit workspace files directly.

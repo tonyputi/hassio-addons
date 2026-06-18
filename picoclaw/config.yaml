@@ -1,5 +1,5 @@
 name: "PicoClaw"
-version: "0.2.9.0"
+version: "0.2.9.1"
 slug: "picoclaw"
 description: "Ultra-lightweight AI agent with 30+ LLM providers and 16 messaging platforms"
 url: "https://github.com/sipeed/picoclaw"
@@ -14,11 +14,13 @@ options:
   timezone: UTC
   ha_mcp_enabled: false
   browser_cdp_port: 3000
+  browser_stealth: true
 
 schema:
   timezone: str
   ha_mcp_enabled: bool
   browser_cdp_port: int
+  browser_stealth: bool
 
 map:
   - share:rw

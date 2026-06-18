@@ -35,7 +35,7 @@ Every add-on follows this layout:
 - **ttyd**: always version 1.7.7, downloaded from GitHub releases, port 7681 (ingress)
 - **Persistent data**: `/share/<addon>/` — survives restarts and updates
 - **Config location**: `/share/<addon>/.<addon>/` (e.g. `.zeroclaw/config.toml`, `.nullclaw/config.json`); ZeroClaw v0.8.0+ also uses `agents/<alias>/workspace/` per agent (default alias = `default`) and `shared/skills/` for host-wide skill bundles
-- **HA options**: `timezone` (str), `ha_mcp_enabled` (bool), `gateway_pairing` (bool) — PicoClaw has no `gateway_pairing`; ZeroClaw/PicoClaw/OpenClaw also have `browser_cdp_port` (int); NullClaw has no browser CDP option
+- **HA options**: `timezone` (str), `ha_mcp_enabled` (bool), `gateway_pairing` (bool) — PicoClaw has no `gateway_pairing`; ZeroClaw/PicoClaw/OpenClaw also have `browser_cdp_port` (int) and `browser_stealth` (bool, default true — appends `?stealth=true` to the CDP URL); NullClaw has no browser CDP option
 - **boot**: `auto` on all four
 - **panel_icon**: `mdi:robot` on all four
 - **run scripts**: use `bashio::config`, `bashio::var.true/false`, `bashio::log.info/warning/fatal`

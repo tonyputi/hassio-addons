@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026.5.28.1
+
+- Add `browser_stealth` HA add-on option (default `true`). When enabled, the `cdpUrl` written into `openclaw.json` is suffixed with `?stealth=true`, which makes Browserless v2 (alexbelgium add-on) attach `puppeteer-extra-plugin-stealth` to every browser session it spawns. The plugin patches `navigator.webdriver`, `navigator.plugins`, `navigator.languages`, the WebGL/Canvas fingerprint, and the `chrome.runtime` object to evade common anti-bot detection. Toggle off only when a specific site breaks under stealth — without the suffix, headless Chrome is trivially detectable client-side.
+
 ## 2026.5.28.0
 
 - Bump OpenClaw to upstream `2026.5.28`: agent/Codex runtime recovery, channel delivery hardening (Matrix/iMessage/Slack/Discord/WhatsApp/Telegram/Teams), mobile and chat surfaces refresh, stricter input validation on Browser/Gateway/cron/Discord/Telegram

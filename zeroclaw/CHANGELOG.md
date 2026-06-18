@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.0.5
+
+- Add `browser_stealth` HA add-on option (default `true`). When enabled, the CDP URL written to `~/.agent-browser/config.json` is suffixed with `?stealth=true`, which makes Browserless v2 (alexbelgium add-on) attach `puppeteer-extra-plugin-stealth` to every browser session it spawns. The plugin patches `navigator.webdriver`, `navigator.plugins`, `navigator.languages`, the WebGL/Canvas fingerprint, and the `chrome.runtime` object to evade common anti-bot detection. Toggle off only when a specific site breaks under stealth — without the suffix, headless Chrome is trivially detectable client-side and login flows like Classter fail.
+
 ## 0.8.0.4
 
 - Pass `--config-dir` as an explicit CLI flag to both `zeroclaw daemon` (Phase G) and the `zeroclaw config list` validation call (Phase F). The previous `export ZEROCLAW_CONFIG_DIR=...` in the run script did not survive the `exec` boundary on this s6-overlay/Docker combination — the daemon process showed `HOME=/root` and no `ZEROCLAW_CONFIG_DIR`, so `default_config_dir()` fell back to `${HOME}/.zeroclaw/` (container-ephemeral). Symptoms: the web UI claimed the agent had no personality files (SOUL.md/AGENTS.md "not found") even though they were present in `/share/zeroclaw/.zeroclaw/agents/default/workspace/`, and PUT writes via the personality API landed in an invisible path. With `--config-dir` the daemon resolves `install_root_dir()` to `/share/zeroclaw/.zeroclaw/` and `agent_workspace_dir("default")` to the right location.
