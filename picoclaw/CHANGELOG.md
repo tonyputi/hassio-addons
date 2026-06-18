@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.9.1
+
+- Add `browser_stealth` HA add-on option (default `true`). When enabled, the CDP URL written to `~/.agent-browser/config.json` is suffixed with `?stealth=true`, which makes Browserless v2 (alexbelgium add-on) attach `puppeteer-extra-plugin-stealth` to every browser session it spawns. The plugin patches `navigator.webdriver`, `navigator.plugins`, `navigator.languages`, the WebGL/Canvas fingerprint, and the `chrome.runtime` object to evade common anti-bot detection. Toggle off only when a specific site breaks under stealth — without the suffix, headless Chrome is trivially detectable client-side.
+
 ## 0.2.9.0
 
 - Bump PicoClaw to upstream `v0.2.9`: MCP section in config web UI, `pretty_print`/`disable_escape_html` defaults for `tool_feedback`, MQTT channel stop fix, Gemini MCP schema sanitization, agent discovery prompt, delegate tool, Bedrock streaming, network error retry

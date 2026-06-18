@@ -172,6 +172,12 @@ With browser automation enabled, the AI agent can:
 
 Without the browser add-on, all other tools (web search, memory, MCP, scheduling, file operations) continue to work normally.
 
+### Stealth mode
+
+The `browser_stealth` option (default `true`) appends `?stealth=true` to the CDP URL written to `~/.agent-browser/config.json`. Browserless v2 reads this query parameter on every WebSocket connection and launches the browser through `puppeteer-extra` with `puppeteer-extra-plugin-stealth` attached, which patches `navigator.webdriver`, `navigator.plugins`, `navigator.languages`, the WebGL/Canvas fingerprint, and the `chrome.runtime` object. Without stealth, headless Chrome is trivially detectable client-side and many login flows refuse to proceed.
+
+Leave it enabled by default. Disable it only if you observe a specific site breaking under stealth (rare — usually flaky scripts that probe for the exact properties the plugin patches).
+
 ## Support
 
 - ZeroClaw docs: https://www.zeroclawlabs.ai
