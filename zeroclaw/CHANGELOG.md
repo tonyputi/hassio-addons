@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.8.1.0
+
+- Bump ZeroClaw binary `v0.8.0` → `v0.8.1` ([upstream release notes](https://github.com/zeroclaw-labs/zeroclaw/releases/tag/v0.8.1)). First patch on the `0.8.x` line: 207 commits, 123 fixes, 46 features over `v0.8.0`. No config schema migration required for this add-on.
+- Highlights that affect this add-on:
+  - **Cron**: weekday range normalization fix for Sunday-alias endpoints (#7208), and `session_target=main` honors a stable session path (#7731). May reduce the need for manual `[agents.X].cron_jobs = [...]` ownership patches when the V2→V3 migration leaves jobs orphaned.
+  - **MCP**: auto-reconnect on stale session or dropped stream (#7351). Improves resilience of the HA MCP bridge across daemon restarts.
+  - **Config**: serde defaults realigned with struct `Default` (#7532) — UI/CLI saves no longer drop fields silently on round-trip.
+  - **Telegram**: base URL validation (#7697); delivery prompt no longer discourages tool use (#7438).
+  - **Memory hygiene**: extended to pruning daily and core DB rows (#7081), which were previously immortal.
+  - **Provider cost tracking**: `cached_input_tokens` surfaces for OpenAI-compatible providers (#7492), including OpenRouter system prompt caching (#7634).
+- Single declared breaking change upstream is internal Rust API only (`feat(providers)!: span attribution` #7748) — irrelevant for add-on users; affects only downstream Rust consumers of the provider call API.
+- No `rootfs/` script changes — `ROOTFS_VERSION` is unchanged.
+
 ## 0.8.0.5
 
 - Add `browser_stealth` HA add-on option (default `true`). When enabled, the CDP URL written to `~/.agent-browser/config.json` is suffixed with `?stealth=true`, which makes Browserless v2 (alexbelgium add-on) attach `puppeteer-extra-plugin-stealth` to every browser session it spawns. The plugin patches `navigator.webdriver`, `navigator.plugins`, `navigator.languages`, the WebGL/Canvas fingerprint, and the `chrome.runtime` object to evade common anti-bot detection. Toggle off only when a specific site breaks under stealth — without the suffix, headless Chrome is trivially detectable client-side and login flows like Classter fail.
