@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.8.2.0
+
+- Bump ZeroClaw binary `v0.8.1` → `v0.8.2` ([upstream release notes](https://github.com/zeroclaw-labs/zeroclaw/releases/tag/v0.8.2)). 152 commits over `v0.8.1`. Release asset naming (`zeroclaw-<triple>-unknown-linux-gnu.tar.gz`) and the schema V3 `config.toml` layout are unchanged, so no Dockerfile or run-script logic changed — only the `ZEROCLAW_VERSION` ARG default.
+- Highlights that affect this add-on:
+  - **Security**: a universal ingress policy layer now frames and sanitizes every untrusted inbound turn on all transports (always on, default disposition unchanged) (#7997); SOP trigger payloads for MQTT/webhook are capped, sanitized, and framed in untrusted-content markers (#8215); the `zc_http_request` plugin tool gained an SSRF guard covering DNS-rebinding and redirect bypasses (#8128); Telegram bot tokens are redacted through the canonical global leak detector (#8127).
+  - **MCP**: tools are scoped per-agent and the denylist is enforced across all connect sites, including the gateway (#8120). Tightens the HA MCP bridge exposure.
+  - **Interop / skills**: A2A agent discovery over the gateway (discovery cards public, task invocation authed) (#7763, #8274); user-configured extra skill registries via `registry:<name>/<skill>` (#7827); typed slash-command options in `SKILL.md` frontmatter (#8021).
+  - **Install**: `zeroclaw` is added to PATH automatically with a `--no-modify-path` opt-out (#8038) — no effect inside the add-on image, which invokes the binary by absolute path.
+
 ## 0.8.1.0
 
 - Bump ZeroClaw binary `v0.8.0` → `v0.8.1` ([upstream release notes](https://github.com/zeroclaw-labs/zeroclaw/releases/tag/v0.8.1)). First patch on the `0.8.x` line: 207 commits, 123 fixes, 46 features over `v0.8.0`. No config schema migration required for this add-on.
