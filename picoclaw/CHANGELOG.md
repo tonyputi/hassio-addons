@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.1.1
+
+- Replace add-on icon with the official upstream PicoClaw mascot (blue prawn with the "P" microchip and coral claw), set on a navy rounded-badge background with a subtle highlight ring. Drops the outdated `clawdchat.ai` badge artwork.
+
 ## 0.3.1.0
 
 - Bump PicoClaw to upstream `v0.3.1`. Highlights: SSRF/private-IP hardening (ISATAP literal guard, block private IPv4 embeds, tighter OneBot inbound media handling), new NEAR AI Cloud provider, configurable remote cron commands, `RegisterChannelSettings` hook for out-of-tree channels, Telegram forum/topic thread ID fix, Gemini `thought_signature` fix, friendlier auth error messages, and broad robustness fixes (panic recovery on core goroutines, atomic lock-store repair, numerous `Close()`/error-path fixes).
