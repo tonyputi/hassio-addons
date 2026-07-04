@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.1.0
+
+- Bump PicoClaw to upstream `v0.3.1`. Highlights: SSRF/private-IP hardening (ISATAP literal guard, block private IPv4 embeds, tighter OneBot inbound media handling), new NEAR AI Cloud provider, configurable remote cron commands, `RegisterChannelSettings` hook for out-of-tree channels, Telegram forum/topic thread ID fix, Gemini `thought_signature` fix, friendlier auth error messages, and broad robustness fixes (panic recovery on core goroutines, atomic lock-store repair, numerous `Close()`/error-path fixes).
+
 ## 0.2.9.1
 
 - Add `browser_stealth` HA add-on option (default `true`). When enabled, the CDP URL written to `~/.agent-browser/config.json` is suffixed with `?stealth=true`, which makes Browserless v2 (alexbelgium add-on) attach `puppeteer-extra-plugin-stealth` to every browser session it spawns. The plugin patches `navigator.webdriver`, `navigator.plugins`, `navigator.languages`, the WebGL/Canvas fingerprint, and the `chrome.runtime` object to evade common anti-bot detection. Toggle off only when a specific site breaks under stealth — without the suffix, headless Chrome is trivially detectable client-side.
