@@ -1,5 +1,5 @@
 name: "PicoClaw"
-version: "0.3.1.1"
+version: "0.3.1.2"
 slug: "picoclaw"
 description: "Ultra-lightweight AI agent with 30+ LLM providers and 16 messaging platforms"
 url: "https://github.com/sipeed/picoclaw"

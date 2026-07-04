@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.1.2
+
+- Replace add-on logo (shown on the add-on info panel) with a transparent-background wordmark: the official PicoClaw mascot next to "Pico" (navy) + "Claw" (coral), matching the new icon. Drops the old white-background `LET'S GO PicoClaw` JPEG.
+
 ## 0.3.1.1
 
 - Replace add-on icon with the official upstream PicoClaw mascot (blue prawn with the "P" microchip and coral claw), set on a navy rounded-badge background with a subtle highlight ring. Drops the outdated `clawdchat.ai` badge artwork.
