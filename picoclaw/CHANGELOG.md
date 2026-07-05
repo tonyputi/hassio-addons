@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.1.3
+
+- Fix the "Persistent data" docs: list the actual PicoClaw workspace files (`AGENT.md`, `SOUL.md`, `USER.md`, `memory/MEMORY.md`, `skills/`). The old text listed a non-existent `IDENTITY.md` (that name belongs to ZeroClaw) and omitted `AGENT.md`/`USER.md`.
+
 ## 0.3.1.2
 
 - Replace add-on logo (shown on the add-on info panel) with a transparent-background wordmark: the official PicoClaw mascot next to "Pico" (navy) + "Claw" (coral), matching the new icon. Drops the old white-background `LET'S GO PicoClaw` JPEG.

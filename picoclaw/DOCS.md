@@ -75,7 +75,12 @@ The add-on includes a web-based terminal accessible via the sidebar panel (ingre
 All PicoClaw data is stored in `/share/picoclaw/`:
 
 - `.picoclaw/config.json` — managed by the launcher web UI
-- `.picoclaw/workspace/` — workspace files (SOUL.md, MEMORY.md, IDENTITY.md, etc.)
+- `.picoclaw/workspace/` — the agent's workspace:
+  - `AGENT.md` — agent definition (name, role, mission, capabilities)
+  - `SOUL.md` — personality and values (tone, behaviour)
+  - `USER.md` — information about you (preferences, timezone, language, interests)
+  - `memory/MEMORY.md` — long-term memory that persists across sessions
+  - `skills/` — reusable skill bundles (each with a `SKILL.md`)
 
 You can edit workspace files using the Home Assistant **File Editor** add-on or via SSH.
 
