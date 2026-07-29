@@ -8,7 +8,7 @@ export SHELL="/bin/bash"
 NULLCLAW_DATA="${HOME}/.nullclaw"
 CONFIG_FILE="${NULLCLAW_DATA}/config.json"
 
-mkdir -p "${NULLCLAW_DATA}" "${HOME}/workspace"
+mkdir -p "${NULLCLAW_DATA}" "${NULLCLAW_DATA}/workspace"
 
 # ── Timezone ──────────────────────────────────────────────────────────────────
 TIMEZONE=$(bashio::config 'timezone')

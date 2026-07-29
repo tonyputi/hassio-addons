@@ -18,4 +18,3 @@
 - Persistent workspace at `/share/nullclaw/`
 - Optional Home Assistant MCP integration
 - Optional gateway pairing control
-- Auto-detect browserless_chrome addon for browser automation
