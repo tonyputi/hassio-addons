@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026.5.29.3
+
+- Add `/etc/environment` with `SHELL=/bin/bash` to rootfs to suppress the `$SHELL not set` warning in `nullclaw doctor`.
+- Bump ROOTFS_VERSION to 3.
+
 ## 2026.5.29.2
 
 - Fix gateway crash on startup: added `gateway.allow_public_bind = true` to the
