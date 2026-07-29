@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.8.3.0
+
+- Bump ZeroClaw binary `v0.8.2` → `v0.8.3` ([upstream release notes](https://github.com/zeroclaw-labs/zeroclaw/releases/tag/v0.8.3)). 379 commits over `v0.8.2`. Release asset naming and schema V3 `config.toml` layout unchanged.
+- Bump agent-browser `v0.25.3` → `v0.33.1` (npm).
+- Bump cloudflared `v2026.3.0` → `v2026.7.3`.
+- Highlights that affect this add-on:
+  - **SOP engine** lands end-to-end: maintenance tick, typed step contracts, live execution, cron/filesystem/calendar triggers, out-of-band approval plane.
+  - **WebAssembly plugin host** (wasmtime component model) for tools, channels, and memory with per-call limits and signature-policy enforcement.
+  - **Git forge channel** with GitHub and Gitea/Forgejo providers + unified `git_forge` tool.
+  - **Security hardening**: multiple SSRF gaps closed, constant-time token comparison, signing-key leak prevention, path-traversal fixes, dependency bumps clearing RUSTSEC advisories.
+  - **Cost & usage accounting**: task-attributed usage ledger, offline pricing catalog, by-period/org-billed views in ZeroCode.
+  - **Providers/Tools**: Bocha AI web-search provider; `browser_open` allows `http://` URLs and `allowed_private_hosts` opt-in; provider requests thread `provider_timeout_secs` and `extra_headers`.
+  - **Gateway**: default HTTP security headers; agent-aware `/api/tools` listing with agent-scoped tool picker.
+  - **Config**: independent delegate targets, `local_small` runtime preset, `x-required-by-transport` metadata for MCP servers.
+  - **MSRV bump**: Rust 1.96.1 (no effect on prebuilt binary).
+
 ## 0.8.2.0
 
 - Bump ZeroClaw binary `v0.8.1` → `v0.8.2` ([upstream release notes](https://github.com/zeroclaw-labs/zeroclaw/releases/tag/v0.8.2)). 152 commits over `v0.8.1`. Release asset naming (`zeroclaw-<triple>-unknown-linux-gnu.tar.gz`) and the schema V3 `config.toml` layout are unchanged, so no Dockerfile or run-script logic changed — only the `ZEROCLAW_VERSION` ARG default.

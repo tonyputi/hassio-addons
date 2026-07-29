@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repo is
 
-A Home Assistant add-on repository containing four AI agent add-ons: **ZeroClaw**, **PicoClaw**, **OpenClaw**, and **NullClaw**. Each add-on packages an upstream AI agent binary/package as a HA add-on using s6-overlay, ttyd, and a minimal set of HA config options.
+A Home Assistant add-on repository containing three AI agent add-ons: **ZeroClaw**, **PicoClaw**, and **NullClaw**. Each add-on packages an upstream AI agent binary/package as a HA add-on using s6-overlay, ttyd, and a minimal set of HA config options.
 
 There are no build steps, tests, or CI pipelines to run locally. Development means editing add-on files and pushing to GitHub — HA pulls from the repo directly.
 
@@ -35,24 +35,24 @@ Every add-on follows this layout:
 - **ttyd**: always version 1.7.7, downloaded from GitHub releases, port 7681 (ingress)
 - **Persistent data**: `/share/<addon>/` — survives restarts and updates
 - **Config location**: `/share/<addon>/.<addon>/` (e.g. `.zeroclaw/config.toml`, `.nullclaw/config.json`); ZeroClaw v0.8.0+ also uses `agents/<alias>/workspace/` per agent (default alias = `default`) and `shared/skills/` for host-wide skill bundles
-- **HA options**: `timezone` (str), `ha_mcp_enabled` (bool), `gateway_pairing` (bool) — PicoClaw has no `gateway_pairing`; ZeroClaw/PicoClaw/OpenClaw also have `browser_cdp_port` (int) and `browser_stealth` (bool, default true — appends `?stealth=true` to the CDP URL); NullClaw has no browser CDP option
-- **boot**: `auto` on all four
-- **panel_icon**: `mdi:robot` on all four
+- **HA options**: `timezone` (str), `ha_mcp_enabled` (bool), `gateway_pairing` (bool) — PicoClaw has no `gateway_pairing`; ZeroClaw/NullClaw also have `browser_cdp_port` (int) and `browser_stealth` (bool, default true — appends `?stealth=true` to the CDP URL); NullClaw has no browser CDP option
+- **boot**: `auto` on all three
+- **panel_icon**: `mdi:robot` on all three
 - **run scripts**: use `bashio::config`, `bashio::var.true/false`, `bashio::log.info/warning/fatal`
 - **MCP injection**: written into the add-on's config file via `jq` on every boot (not persisted as HA config)
 - **Browser auto-detect**: all run scripts check `http://localhost:3000/json/version` at boot; if `browserless_chrome` (alexbelgium) is running, they configure the CDP endpoint automatically
 
 ## Per-add-on specifics
 
-| | ZeroClaw | PicoClaw | OpenClaw | NullClaw |
-| --- | --- | --- | --- | --- |
-| Install | Binary (Rust, GitHub releases) | Binary (Go, GitHub releases) | `npm install -g openclaw` | Binary (Zig, GitHub releases) |
-| Config format | TOML (`config.toml`) | JSON (`config.json`) | JSON (`openclaw.json`) | JSON (`config.json`) |
-| Gateway port | 42617 | 18800 | 38789 | 43000 |
-| First run | `zeroclaw onboard` (then `zeroclaw agent -a default` for chat in V3) | launcher web UI | `openclaw configure` | `nullclaw onboard --interactive` |
-| `gateway_pairing` | `require_pairing` in TOML | — (always auth) | `dangerouslyDisableDeviceAuth` in JSON | `require_pairing` in JSON |
-| MCP key | `[[mcp.servers]]` TOML append | `tools.mcp.servers` jq merge | `mcpServers` jq merge | `mcp_servers` jq merge |
-| Browser CDP | `~/.agent-browser/config.json` | `~/.agent-browser/config.json` | `cdpUrl` in openclaw.json | None (uses xdg-open only; no CDP support) |
+| | ZeroClaw | PicoClaw | NullClaw |
+| --- | --- | --- | --- |
+| Install | Binary (Rust, GitHub releases) | Binary (Go, GitHub releases) | Binary (Zig, GitHub releases) |
+| Config format | TOML (`config.toml`) | JSON (`config.json`) | JSON (`config.json`) |
+| Gateway port | 42617 | 18800 | 43000 |
+| First run | `zeroclaw onboard` (then `zeroclaw agent -a default` for chat in V3) | launcher web UI | `nullclaw onboard --interactive` |
+| `gateway_pairing` | `require_pairing` in TOML | — (always auth) | `require_pairing` in JSON |
+| MCP key | `[[mcp.servers]]` TOML append | `tools.mcp.servers` jq merge | `mcp_servers` jq merge |
+| Browser CDP | `~/.agent-browser/config.json` | `~/.agent-browser/config.json` | None (uses xdg-open only; no CDP support) |
 
 ## Versioning and releases
 
