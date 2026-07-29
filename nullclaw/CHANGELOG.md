@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026.5.30.0
+
+- Fix gateway crash on startup: added `gateway.allow_public_bind = true` to the
+  configuration injected at boot. NullClaw refuses to start when the gateway binds
+  to `0.0.0.0` without this flag enabled.
+- Change `gateway_pairing` default to `false` — pairing is not required for LAN access.
+- Fix workspace path inconsistency: workspace moved inside `.nullclaw/` (`.nullclaw/workspace/`)
+  to align with ZeroClaw (`~/.zeroclaw/agents/default/workspace/`) and PicoClaw
+  (`~/.picoclaw/workspace/`). Removed stale docs entries for unsupported Browser
+  Automation and `browser_cdp_port` features.
+- Bump version to `2026.5.30.0`.
+
 ## 2026.5.29.0
 
 - Bump NullClaw binary `2026.4.17` → `2026.5.29` (covers two upstream stable releases). Highlights:

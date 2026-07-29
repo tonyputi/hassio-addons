@@ -46,9 +46,9 @@ PAIRING_VAL="true"
 if bashio::var.false "${GATEWAY_PAIRING}"; then PAIRING_VAL="false"; fi
 
 jq --argjson pairing "${PAIRING_VAL}" \
-    '.gateway.host = "0.0.0.0" | .gateway.port = 43000 | .gateway.require_pairing = $pairing' \
+    '.gateway.host = "0.0.0.0" | .gateway.port = 43000 | .gateway.require_pairing = $pairing | .gateway.allow_public_bind = true' \
     "${CONFIG_FILE}" > /tmp/nc_tmp.json && mv /tmp/nc_tmp.json "${CONFIG_FILE}"
-bashio::log.info "Gateway configured (port=43000, pairing=${PAIRING_VAL})."
+bashio::log.info "Gateway configured (port=43000, host=0.0.0.0, pairing=${PAIRING_VAL}, allow_public_bind=true)."
 
 # ── Start gateway ─────────────────────────────────────────────────────────────
 bashio::log.info "Starting NullClaw gateway on port 43000..."
