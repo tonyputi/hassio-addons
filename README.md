@@ -1,9 +1,9 @@
 <p align="center">
-  <img src="zeroclaw/icon.png" alt="ZeroClaw" width="72" />
+  <img src="zeroclaw/icon.png" alt="ZeroClaw" width="100" />
   &nbsp;&nbsp;&nbsp;
-  <img src="picoclaw/icon.png" alt="PicoClaw" width="72" />
+  <img src="picoclaw/icon.png" alt="PicoClaw" width="100" />
   &nbsp;&nbsp;&nbsp;
-  <img src="nullclaw/icon.png" alt="NullClaw" width="72" />
+  <img src="nullclaw/icon.png" alt="NullClaw" width="100" />
 </p>
 
 <h1 align="center">AI Add-ons for Home Assistant</h1>
