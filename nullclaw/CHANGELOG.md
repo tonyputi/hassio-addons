@@ -1,6 +1,6 @@
 # Changelog
 
-## 2026.5.30.0
+## 2026.5.29.2
 
 - Fix gateway crash on startup: added `gateway.allow_public_bind = true` to the
   configuration injected at boot. NullClaw refuses to start when the gateway binds
@@ -10,7 +10,7 @@
   to align with ZeroClaw (`~/.zeroclaw/agents/default/workspace/`) and PicoClaw
   (`~/.picoclaw/workspace/`). Removed stale docs entries for unsupported Browser
   Automation and `browser_cdp_port` features.
-- Bump version to `2026.5.30.0`.
+- Bump NullClaw version `2026.5.29.1` → `2026.5.29.2`.
 
 ## 2026.5.29.0
 
