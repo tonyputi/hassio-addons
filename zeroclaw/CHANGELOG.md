@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.8.4.0
+
+- Bump ZeroClaw binary `v0.8.3` → `v0.8.4` ([upstream release notes](https://github.com/zeroclaw-labs/zeroclaw/releases/tag/v0.8.4)). The Linux GNU asset names and schema V3 `config.toml` layout used by this add-on are unchanged.
+- Highlights that affect this add-on:
+  - **Memory and SOP controls**: opt-in retrieval caching, reranking, typed-fact extraction, auditable recall paths, per-SOP admission policies, quorum approvals, and editable checkpoints.
+  - **Gateway and providers**: more reliable model retries/fallbacks, whole-turn history trimming, improved MCP multiplexing, Telegram inbound debounce, and Mattermost WebSocket listening.
+  - **Security**: Landlock restrictions now apply to spawned child processes rather than the daemon; OAuth credential inheritance and Nostr denial-of-service flaws are fixed.
+- **Upgrade notes**: configured generic webhook channels now require a `secret` or ZeroClaw refuses to start. ClawHub skill sources are no longer accepted, and Nextcloud Talk requires its signed Talk Bot API with `webhook_secret`.
+
 ## 0.8.3.0
 
 - Bump ZeroClaw binary `v0.8.2` → `v0.8.3` ([upstream release notes](https://github.com/zeroclaw-labs/zeroclaw/releases/tag/v0.8.3)). 379 commits over `v0.8.2`. Release asset naming and schema V3 `config.toml` layout unchanged.
