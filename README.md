@@ -126,6 +126,10 @@ The smallest fully autonomous AI assistant — a 678 KB static Zig binary. Boots
 
 ---
 
+## Repository automation
+
+PR CI parses the repository and add-on metadata. Dependabot updates can enable native squash auto-merge after CI; human CODEOWNER review and required checks remain mandatory. Before activation, require `Validate metadata`, enable auto-merge and squash, and configure the repository-scoped GitHub App with Contents and Pull requests write, `GH_APP_ID` and `GH_APP_PRIVATE_KEY`, without ruleset bypass. See the [shared workflow prerequisites](https://github.com/tonyputi/.github#dependabot-auto-merge).
+
 ## Support
 
 - Issues with these add-ons: [open an issue](https://github.com/tonyputi/hassio-addons/issues)

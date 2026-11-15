@@ -1,0 +1,17 @@
+name: CI
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate metadata
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Parse add-on metadata
+        run: |
+          ruby -e 'require "yaml"; require "json"; JSON.parse(File.read("repository.json")); Dir["*/{config,build}.yaml", "*/translations/*.yaml"].each { |file| YAML.parse_file(file) }'
