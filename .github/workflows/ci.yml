@@ -11,7 +11,7 @@ jobs:
     name: Validate metadata
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Parse add-on metadata
         run: |
           ruby -e 'require "yaml"; require "json"; JSON.parse(File.read("repository.json")); Dir["*/{config,build}.yaml", "*/translations/*.yaml"].each { |file| YAML.parse_file(file) }'
